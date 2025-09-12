@@ -3,11 +3,11 @@
 This module provides parsing for traditional tree diagram representations.
 """
 
-from .lexer import TreeLexer
-from .parser import TreeDiagramParser
-from .tokens import LexerResult
-from .tokens import TokenType
-from .tokens import TreeToken
+from treemancer.languages.diagram.lexer import TreeLexer
+from treemancer.languages.diagram.parser import TreeDiagramParser
+from treemancer.languages.diagram.tokens import LexerResult
+from treemancer.languages.diagram.tokens import TokenType
+from treemancer.languages.diagram.tokens import TreeToken
 
 
 __all__ = [

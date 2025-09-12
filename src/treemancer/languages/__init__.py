@@ -6,10 +6,10 @@ This package contains parsers for different tree representation languages:
 """
 
 # Re-export main classes for backward compatibility
-from .declarative import DeclarativeLexer
-from .declarative import DeclarativeParser
-from .diagram import TreeDiagramParser
-from .diagram import TreeLexer
+from treemancer.languages.declarative import DeclarativeLexer
+from treemancer.languages.declarative import DeclarativeParser
+from treemancer.languages.diagram import TreeDiagramParser
+from treemancer.languages.diagram import TreeLexer
 
 
 __all__ = [

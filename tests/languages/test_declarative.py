@@ -2,12 +2,12 @@
 
 import pytest
 
-from src.treemancer.languages.declarative import DeclarativeLexer
-from src.treemancer.languages.declarative import DeclarativeParser
-from src.treemancer.languages.declarative import DeclarativeTokenType
-from src.treemancer.languages.declarative.parser import DeclarativeParseError
-from src.treemancer.models import DirectoryNode
-from src.treemancer.models import FileNode
+from treemancer.languages.declarative import DeclarativeLexer
+from treemancer.languages.declarative import DeclarativeParser
+from treemancer.languages.declarative import DeclarativeTokenType
+from treemancer.languages.declarative.parser import DeclarativeParseError
+from treemancer.models import DirectoryNode
+from treemancer.models import FileNode
 
 
 class TestDeclarativeLexer:

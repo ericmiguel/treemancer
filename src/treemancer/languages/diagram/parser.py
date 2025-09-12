@@ -6,12 +6,12 @@ from collections.abc import Iterator
 from pathlib import Path
 import re
 
-from ...models import DirectoryNode
-from ...models import FileNode
-from ...models import FileSystemTree
-from ...models import TreeData
-from .lexer import TreeLexer
-from .tokens import TokenType
+from treemancer.languages.diagram.lexer import TreeLexer
+from treemancer.languages.diagram.tokens import TokenType
+from treemancer.models import DirectoryNode
+from treemancer.models import FileNode
+from treemancer.models import FileSystemTree
+from treemancer.models import TreeData
 
 
 class AmbiguousNodeTypeError(Exception):
@@ -117,38 +117,44 @@ class TreeDiagramParser:
         in_code_block = False
 
         for line in lines:
-            stripped = line.strip()
+            result = self._process_line(line, current_tree, in_code_block)
+            current_tree, in_code_block, tree_to_yield = result
 
-            # Check for code block boundaries
-            if stripped.startswith("```"):
-                in_code_block = not in_code_block
-                if not in_code_block and current_tree:
-                    # Validate that this is actually a tree before yielding
-                    if self._is_valid_tree(current_tree):
-                        yield current_tree
-                    current_tree = []
-                continue
-
-            # SECURITY: Only process lines inside code blocks
-            if not in_code_block:
-                continue
-
-            # Skip empty lines unless we're building a tree
-            if not stripped and not current_tree:
-                continue
-
-            # Check if this looks like a tree line
-            if self._is_tree_line(line):
-                current_tree.append(line)
-            elif current_tree:
-                # We have a tree and hit a non-tree line - tree is complete
-                if self._is_valid_tree(current_tree):
-                    yield current_tree
-                current_tree = []
+            if tree_to_yield:
+                yield tree_to_yield
 
         # Don't forget the last tree
         if current_tree and self._is_valid_tree(current_tree):
             yield current_tree
+
+    def _process_line(
+        self, line: str, current_tree: list[str], in_code_block: bool
+    ) -> tuple[list[str], bool, list[str] | None]:
+        """Process a single line and return updated state."""
+        stripped = line.strip()
+        tree_to_yield = None
+
+        if stripped.startswith("```"):
+            in_code_block = not in_code_block
+            if not in_code_block and current_tree and self._is_valid_tree(current_tree):
+                tree_to_yield = current_tree
+            if not in_code_block:
+                current_tree = []
+            return current_tree, in_code_block, tree_to_yield
+
+        if not in_code_block:
+            return current_tree, in_code_block, tree_to_yield
+
+        if not stripped and not current_tree:
+            return current_tree, in_code_block, tree_to_yield
+
+        if self._is_tree_line(line):
+            current_tree.append(line)
+        elif current_tree and self._is_valid_tree(current_tree):
+            tree_to_yield = current_tree
+            current_tree = []
+
+        return current_tree, in_code_block, tree_to_yield
 
     def _is_tree_line(self, line: str) -> bool:
         """Check if a line looks like part of a tree diagram.

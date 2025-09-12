@@ -5,9 +5,9 @@ from __future__ import annotations
 import re
 from typing import Iterator
 
-from .tokens import LexerResult
-from .tokens import TokenType
-from .tokens import TreeToken
+from treemancer.languages.diagram.tokens import LexerResult
+from treemancer.languages.diagram.tokens import TokenType
+from treemancer.languages.diagram.tokens import TreeToken
 
 
 class TreeLexer:

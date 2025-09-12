@@ -12,6 +12,7 @@ import typer
 from treemancer.creator import TreeCreator
 from treemancer.languages import DeclarativeParser
 from treemancer.languages import TreeDiagramParser
+from treemancer.models import DirectoryNode
 from treemancer.models import FileSystemNode
 
 
@@ -336,7 +337,7 @@ def _handle_syntax_input(
 def _count_nodes(node: FileSystemNode) -> int:
     """Count total nodes in tree."""
     count = 1  # Count current node
-    if hasattr(node, "children"):
+    if isinstance(node, DirectoryNode):
         for child in node.children:
             count += _count_nodes(child)
     return count

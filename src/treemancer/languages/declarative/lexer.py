@@ -3,10 +3,30 @@
 from __future__ import annotations
 
 import re
+from typing import TypedDict
 
-from .tokens import DeclarativeLexerResult
-from .tokens import DeclarativeToken
-from .tokens import DeclarativeTokenType
+from treemancer.languages.declarative.tokens import DeclarativeLexerResult
+from treemancer.languages.declarative.tokens import DeclarativeToken
+from treemancer.languages.declarative.tokens import DeclarativeTokenType
+
+
+class AnalysisStructure(TypedDict):
+    """Structure information from syntax analysis."""
+
+    levels: int
+    cascade_resets: int
+    names: int
+    type_hints: int
+
+
+class SyntaxAnalysis(TypedDict):
+    """Result of syntax analysis."""
+
+    valid: bool
+    total_tokens: int
+    token_counts: dict[str, int]
+    structure: AnalysisStructure
+    errors: list[str]
 
 
 class DeclarativeLexer:
@@ -121,7 +141,7 @@ class DeclarativeLexer:
         Logic: After > NAME, if there's whitespace followed by another NAME
         (without | or >), treat the whitespace as SIBLING_SEPARATOR.
         """
-        result = []
+        result: list[DeclarativeToken] = []
         i = 0
 
         while i < len(tokens):
@@ -215,7 +235,7 @@ class DeclarativeLexer:
             if token.type not in {DeclarativeTokenType.WHITESPACE}
         ]
 
-    def analyze_syntax(self, text: str) -> dict[str, object]:
+    def analyze_syntax(self, text: str) -> SyntaxAnalysis:
         """Analyze the structure of declarative syntax.
 
         Parameters

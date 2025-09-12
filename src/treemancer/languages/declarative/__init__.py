@@ -1,11 +1,11 @@
 """Declarative syntax language for TreeMancer."""
 
-from .lexer import DeclarativeLexer
-from .parser import DeclarativeParser
-from .tokens import DeclarativeLexerResult
-from .tokens import DeclarativeNode
-from .tokens import DeclarativeToken
-from .tokens import DeclarativeTokenType
+from treemancer.languages.declarative.lexer import DeclarativeLexer
+from treemancer.languages.declarative.parser import DeclarativeParser
+from treemancer.languages.declarative.tokens import DeclarativeLexerResult
+from treemancer.languages.declarative.tokens import DeclarativeNode
+from treemancer.languages.declarative.tokens import DeclarativeToken
+from treemancer.languages.declarative.tokens import DeclarativeTokenType
 
 
 __all__ = [

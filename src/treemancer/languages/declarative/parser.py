@@ -3,15 +3,28 @@
 from __future__ import annotations
 
 from typing import Optional
+from typing import TypedDict
 
-from ...models import DirectoryNode
-from ...models import FileNode
-from ...models import FileSystemNode
-from ...models import FileSystemTree
-from .lexer import DeclarativeLexer
-from .tokens import DeclarativeNode
-from .tokens import DeclarativeToken
-from .tokens import DeclarativeTokenType
+from treemancer.languages.declarative.lexer import DeclarativeLexer
+from treemancer.languages.declarative.lexer import SyntaxAnalysis
+from treemancer.languages.declarative.tokens import DeclarativeNode
+from treemancer.languages.declarative.tokens import DeclarativeToken
+from treemancer.languages.declarative.tokens import DeclarativeTokenType
+from treemancer.models import DirectoryNode
+from treemancer.models import FileNode
+from treemancer.models import FileSystemNode
+from treemancer.models import FileSystemTree
+
+
+class ValidationResult(TypedDict):
+    """Result of syntax validation."""
+
+    valid: bool
+    tree_valid: bool
+    node_count: int
+    max_depth: int
+    lexer_analysis: SyntaxAnalysis
+    errors: list[str]
 
 
 class DeclarativeParseError(Exception):
@@ -398,7 +411,7 @@ class DeclarativeParser:
         else:  # file
             return FileNode(name=declarative_node.name)
 
-    def validate_syntax(self, text: str) -> dict[str, object]:
+    def validate_syntax(self, text: str) -> ValidationResult:
         """Validate declarative syntax and return analysis.
 
         Parameters
