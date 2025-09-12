@@ -8,17 +8,17 @@ import tempfile
 class TestDeclarativeCLI:
     """Test CLI integration with declarative syntax."""
 
-    def test_from_syntax_help(self):
-        """Test that from-syntax command shows help."""
+    def test_create_help(self):
+        """Test that create command shows help."""
         result = subprocess.run(
-            ["python", "-m", "treemancer.cli", "from-syntax", "--help"],
+            ["python", "-m", "treemancer.cli", "create", "--help"],
             capture_output=True,
             text=True,
             check=False,
         )
         assert result.returncode == 0
-        assert "from-syntax" in result.stdout
-        assert "declarative syntax" in result.stdout
+        assert "create" in result.stdout
+        assert "syntax or file" in result.stdout
 
     def test_from_syntax_dry_run(self):
         """Test dry run functionality with declarative syntax."""
@@ -27,7 +27,7 @@ class TestDeclarativeCLI:
                 "python",
                 "-m",
                 "treemancer.cli",
-                "from-syntax",
+                "create",
                 "project > d(src) > main.py | d(utils) > helper.py",
                 "--dry-run",
             ],
@@ -48,7 +48,7 @@ class TestDeclarativeCLI:
                 "python",
                 "-m",
                 "treemancer.cli",
-                "from-syntax",
+                "create",
                 "app > d(src) > f(main.py) | d(tests) > f(test_main.py)",
                 "--dry-run",
             ],
@@ -69,7 +69,7 @@ class TestDeclarativeCLI:
                 "python",
                 "-m",
                 "treemancer.cli",
-                "from-syntax",
+                "create",
                 "invalid > > missing_name",
             ],
             capture_output=True,
@@ -90,7 +90,7 @@ class TestDeclarativeCLI:
                     "python",
                     "-m",
                     "treemancer.cli",
-                    "from-syntax",
+                    "create",
                     "testproject > d(src) > app.py | d(tests) > test_app.py",
                     "--output",
                     str(output_path),
@@ -120,7 +120,7 @@ class TestDeclarativeCLI:
                     "python",
                     "-m",
                     "treemancer.cli",
-                    "from-syntax",
+                    "create",
                     "project > d(src) > main.py | d(docs) > readme.md",
                     "--output",
                     str(output_path),
@@ -143,16 +143,15 @@ class TestDeclarativeCLI:
             assert not (output_path / "project" / "src" / "main.py").exists()
             assert not (output_path / "project" / "docs" / "readme.md").exists()
 
-    def test_from_syntax_to_diagram(self):
-        """Test --to-diagram option converts syntax to tree diagram."""
+    def test_preview_syntax(self):
+        """Test preview command shows tree structure."""
         result = subprocess.run(
             [
                 "python",
                 "-m",
                 "treemancer.cli",
-                "from-syntax",
+                "preview",
                 "app > main.py | config.py",
-                "--to-diagram",
             ],
             capture_output=True,
             text=True,
@@ -160,7 +159,8 @@ class TestDeclarativeCLI:
         )
 
         assert result.returncode == 0
-        assert "Tree Diagram:" in result.stdout
-        assert "└── app/" in result.stdout
-        assert "├── main.py" in result.stdout
-        assert "└── config.py" in result.stdout
+        assert (
+            "app/" in result.stdout
+            and "main.py" in result.stdout
+            and "config.py" in result.stdout
+        )

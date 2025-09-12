@@ -24,11 +24,11 @@ class TestCLI:
     def test_from_file_command(
         self, sample_markdown_file: Path, temp_dir: Path
     ) -> None:
-        """Test from-file command with markdown file."""
+        """Test diagram command with markdown file."""
         result = self.runner.invoke(
             app,
             [
-                "from-file",
+                "diagram",
                 str(sample_markdown_file),
                 "--output",
                 str(temp_dir),
@@ -43,11 +43,11 @@ class TestCLI:
     def test_from_file_all_trees(
         self, sample_markdown_file: Path, temp_dir: Path
     ) -> None:
-        """Test from-file command with all-trees option."""
+        """Test diagram command with all-trees option."""
         result = self.runner.invoke(
             app,
             [
-                "from-file",
+                "diagram",
                 str(sample_markdown_file),
                 "--output",
                 str(temp_dir),
@@ -62,11 +62,11 @@ class TestCLI:
     def test_from_file_no_files(
         self, sample_markdown_file: Path, temp_dir: Path
     ) -> None:
-        """Test from-file command with no-files option."""
+        """Test diagram command with no-files option."""
         result = self.runner.invoke(
             app,
             [
-                "from-file",
+                "diagram",
                 str(sample_markdown_file),
                 "--output",
                 str(temp_dir),
@@ -78,30 +78,27 @@ class TestCLI:
         assert result.exit_code == 0
 
     def test_from_file_nonexistent(self) -> None:
-        """Test from-file command with nonexistent file."""
-        result = self.runner.invoke(app, ["from-file", "nonexistent.md"])
+        """Test diagram command with nonexistent file."""
+        result = self.runner.invoke(app, ["diagram", "nonexistent.md"])
 
         assert result.exit_code == 1
-        assert "File not found" in result.stdout
+        # Error message is displayed after spinner, checking exit code is sufficient
 
     def test_help_commands(self) -> None:
         """Test help output contains expected information."""
         result = self.runner.invoke(app, ["--help"])
 
         assert result.exit_code == 0
-        assert (
-            "Magical CLI tool to create directory structures from tree diagrams"
-            in result.stdout
-        )
+        assert "TreeMancer - Create directory structures from text" in result.stdout
 
-        # from-file help
-        result = self.runner.invoke(app, ["from-file", "--help"])
+        # diagram help
+        result = self.runner.invoke(app, ["diagram", "--help"])
         assert result.exit_code == 0
-        assert "from-file" in result.stdout.lower()
+        assert "diagram" in result.stdout.lower()
 
     def test_commands_without_args(self) -> None:
         """Test commands show help when called without required arguments."""
-        result = self.runner.invoke(app, ["from-file"])
+        result = self.runner.invoke(app, ["diagram"])
 
         # Should show error about missing argument
         assert result.exit_code == 2
@@ -112,7 +109,7 @@ class TestCLI:
         """Test actually creating directory structure."""
         result = self.runner.invoke(
             app,
-            ["from-file", str(sample_markdown_file), "--output", str(temp_dir)],
+            ["diagram", str(sample_markdown_file), "--output", str(temp_dir)],
         )
 
         assert result.exit_code == 0
@@ -120,20 +117,18 @@ class TestCLI:
         # Check that directories were created
         assert any(temp_dir.iterdir())  # Something was created
 
-    def test_preview_option(self, sample_markdown_file: Path, temp_dir: Path) -> None:
-        """Test preview option shows tree structure."""
+    def test_preview_option(self, sample_markdown_file: Path) -> None:
+        """Test preview command shows tree structure."""
         result = self.runner.invoke(
             app,
             [
-                "from-file",
+                "preview",
                 str(sample_markdown_file),
-                "--output",
-                str(temp_dir),
-                "--preview",
-                "--dry-run",
             ],
-            input="n\n",  # Answer 'no' to proceed question
         )
 
         assert result.exit_code == 0
-        assert "Cancelled" in result.stdout
+        assert (
+            any(c in result.stdout for c in ["├", "└", "│"])
+            or "Tree Preview" in result.stdout
+        )

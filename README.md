@@ -6,7 +6,7 @@ TreeMancer is an enchanted CLI tool that creates real directory structures from 
 
 -   🎯 **Dual Input Methods**: Tree diagrams OR declarative syntax
 -   📋 **Template System**: Reusable `.tree` files for common structures
--   🔄 **Round-trip Conversion**: Syntax ↔ Tree diagram conversion
+-   � **Smart Commands**: Intuitive `create`, `preview`, `check`, and `diagram` commands
 -   ⚡ **Fast & Reliable**: Built with modern Python and comprehensive tests
 -   🔮 **Smart Detection**: Automatic file vs directory inference
 
@@ -24,39 +24,48 @@ uv add treemancer
 
 ```bash
 # Create a simple project structure
-treemancer from-syntax "myapp > README.md main.py src > utils.py"
+treemancer create "myapp > README.md main.py src > utils.py"
 
 # Preview before creating
-treemancer from-syntax "myapp > src > main.py | tests > test.py" --preview
+treemancer preview "myapp > src > main.py | tests > test.py"
 
 # Use a template file
-treemancer from-syntax templates/webapp.tree --output ./my-webapp
+treemancer create templates/webapp.tree --output ./my-webapp
 
-# Convert syntax to tree diagram
-treemancer from-syntax "app > file1.py file2.py" --to-diagram
+# Create from tree diagrams in files
+treemancer diagram project-structure.md
 ```
 
-## 🎪 Real-World Examples
+## � New Intuitive Commands
+
+TreeMancer now features a cleaner, more intuitive CLI:
+
+- **`create`** - Main command that auto-detects syntax vs files
+- **`preview`** - See structure before creating (replaces `--preview`)  
+- **`check`** - Validate syntax without creating anything
+- **`diagram`** - Create from tree diagrams in markdown/text files
+
+## �🎪 Real-World Examples
 
 ### Web Application
 
 ```bash
 # Full-stack web app structure
-treemancer from-syntax "webapp > d(frontend) d(backend) f(docker-compose.yml) | frontend > d(src) d(public) f(package.json) | src > d(components) d(pages) | backend > d(models) d(routes) f(app.py)"
+treemancer create "webapp > d(frontend) d(backend) f(docker-compose.yml) | frontend > d(src) d(public) f(package.json) | src > d(components) d(pages) | backend > d(models) d(routes) f(app.py)"
 ```
 
 ### Python Project
 
 ```bash
 # Complete Python project
-treemancer from-syntax "my_project > f(__init__.py) f(main.py) d(tests) d(docs) f(requirements.txt) f(README.md) | tests > f(__init__.py) f(test_main.py)"
+treemancer create "my_project > f(__init__.py) f(main.py) d(tests) d(docs) f(requirements.txt) f(README.md) | tests > f(__init__.py) f(test_main.py)"
 ```
 
 ### Microservice
 
 ```bash
 # Microservice with Docker
-treemancer from-syntax "microservice > f(Dockerfile) f(docker-compose.yml) d(app) d(tests) | app > f(main.py) f(config.py) d(models) d(routes)"
+treemancer create "microservice > f(Dockerfile) f(docker-compose.yml) d(app) d(tests) | app > f(main.py) f(config.py) d(models) d(routes)"
 ```
 
 ## 📚 Declarative Syntax Manual
@@ -70,7 +79,7 @@ Creates a parent-child relationship. The next item becomes a child of the curren
 
 ```bash
 # Creates: project/src/main.py
-treemancer from-syntax "project > src > main.py"
+treemancer create "project > src > main.py"
 ```
 
 #### **`|`** - Cascade Reset (Go Back One Level)
@@ -78,7 +87,7 @@ Goes back to the parent level, allowing you to create siblings.
 
 ```bash
 # Creates: project/src/file1.py + project/file2.py
-treemancer from-syntax "project > src > file1.py | file2.py"
+treemancer create "project > src > file1.py | file2.py"
 ```
 
 #### **Space** - Sibling Separator
@@ -86,7 +95,7 @@ Creates items at the same level (siblings).
 
 ```bash
 # Creates: app/file1.py + app/file2.py + app/file3.py
-treemancer from-syntax "app > file1.py file2.py file3.py"
+treemancer create "app > file1.py file2.py file3.py"
 ```
 
 ### 🏷️ Type Hints (Optional)
@@ -95,12 +104,12 @@ Force specific types when automatic inference isn't enough:
 
 #### **`d(name)`** - Force Directory
 ```bash
-treemancer from-syntax "d(utils) > helper.py"  # utils/ is definitely a directory
+treemancer create "d(utils) > helper.py"  # utils/ is definitely a directory
 ```
 
 #### **`f(name)`** - Force File  
 ```bash
-treemancer from-syntax "f(Dockerfile) > commands"  # Dockerfile is definitely a file
+treemancer create "f(Dockerfile) > commands"  # Dockerfile is definitely a file
 ```
 
 ### 🔄 Conversion Examples
@@ -130,7 +139,7 @@ webapp > package.json src > components > Header.js Footer.js | pages > Home.js |
 
 **Input (Declarative Syntax):**
 ```bash
-treemancer from-syntax "project > README.md src > main.py utils.py | tests > test_main.py" --to-diagram
+treemancer preview "project > README.md src > main.py utils.py | tests > test_main.py"
 ```
 
 **Output (Tree Diagram):**
@@ -156,13 +165,10 @@ fastapi_project > f(main.py) f(requirements.txt) d(app) d(tests) | app > f(__ini
 **Usage:**
 ```bash
 # Use the template
-treemancer from-syntax templates/fastapi.tree
+treemancer create templates/fastapi.tree
 
 # Preview before creating
-treemancer from-syntax templates/fastapi.tree --preview
-
-# Convert to tree diagram
-treemancer from-syntax templates/fastapi.tree --to-diagram
+treemancer preview templates/fastapi.tree
 ```
 
 ### 🎨 Complex Example Breakdown
@@ -171,7 +177,7 @@ Let's break down a complex microservices structure:
 
 ```bash
 # Full command
-treemancer from-syntax "microservices > f(docker-compose.yml) d(user-service) d(product-service) d(api-gateway) | user-service > f(Dockerfile) f(requirements.txt) d(app) | app > f(main.py) d(models) d(routes) | product-service > f(Dockerfile) f(go.mod) d(handlers) d(models) | api-gateway > f(package.json) d(src) d(config)"
+treemancer create "microservices > f(docker-compose.yml) d(user-service) d(product-service) d(api-gateway) | user-service > f(Dockerfile) f(requirements.txt) d(app) | app > f(main.py) d(models) d(routes) | product-service > f(Dockerfile) f(go.mod) d(handlers) d(models) | api-gateway > f(package.json) d(src) d(config)"
 ```
 
 **Step by step:**
@@ -217,36 +223,40 @@ microservices/
 
 ## 🛠️ Command Reference
 
-### Basic Commands
+### Main Commands
 
 ```bash
-# Create from declarative syntax
-treemancer from-syntax "project > src > main.py"
+# Create from declarative syntax or file (auto-detection)
+treemancer create "project > src > main.py"
+treemancer create templates/project.tree
+treemancer create structure.md
 
-# Create from tree diagram file  
-treemancer from-file diagram.md
+# Preview structure without creating it
+treemancer preview "project > src > main.py"
+treemancer preview templates/project.tree
 
-# Generate tree diagram only
-treemancer from-syntax "app > file.py" --to-diagram
+# Validate syntax only
+treemancer check "project > src > main.py"
+
+# Create from tree diagrams in markdown/text files
+treemancer diagram project-structure.md
 ```
 
 ### Useful Options
 
 ```bash
-# Preview structure before creating
-treemancer from-syntax "..." --preview
-
 # Dry run (show what would be created)  
-treemancer from-syntax "..." --dry-run
+treemancer create "..." --dry-run
 
 # Create only directories (skip files)
-treemancer from-syntax "..." --no-files
+treemancer create "..." --no-files
 
 # Specify output directory
-treemancer from-syntax "..." --output /path/to/output
+treemancer create "..." --output /path/to/output
 
 # Parse all trees from file
-treemancer from-file document.md --all-trees
+treemancer diagram document.md --all-trees
+treemancer create document.md --all-trees
 ```
 
 ### Template Workflow
@@ -256,10 +266,10 @@ treemancer from-file document.md --all-trees
 echo "webapp > src > App.js | public > index.html" > webapp.tree
 
 # Use the template
-treemancer from-syntax webapp.tree
+treemancer create webapp.tree
 
 # Preview template
-treemancer from-syntax webapp.tree --preview --to-diagram
+treemancer preview webapp.tree
 ```
 
 ## 🧪 Development
