@@ -106,14 +106,19 @@ class DeclarativeParser:
         position = 0
         node_stack: list[DeclarativeNode] = []
 
-        # Create current directory node to hold all items (represents CWD)
-        root_node = DeclarativeNode(name=".", is_directory=True, explicit_type=True)
-        node_stack.append(root_node)
-        current_node = root_node
-
-        # Parse all tokens as potential children of theoretical root
         if position >= len(tokens):
             raise DeclarativeParseError("Empty input")
+
+        # First token becomes the actual root
+        first_token = tokens[position]
+        if first_token.type == DeclarativeTokenType.EOF:
+            raise DeclarativeParseError("Empty input")
+
+        root_node = self._parse_single_node(tokens, position)
+        position += 1
+
+        node_stack.append(root_node)
+        current_node = root_node
 
         while position < len(tokens):
             token = tokens[position]
@@ -204,10 +209,7 @@ class DeclarativeParser:
         """Handle SEPARATOR tokens (>)."""
         # > - go deeper, next node becomes child of current
         position += 1
-        if (
-            position >= len(tokens)
-            or tokens[position].type == DeclarativeTokenType.EOF
-        ):
+        if position >= len(tokens) or tokens[position].type == DeclarativeTokenType.EOF:
             raise DeclarativeParseError("Expected node after separator")
 
         child_node = self._parse_single_node(tokens, position)
@@ -236,10 +238,7 @@ class DeclarativeParser:
         """Handle CASCADE_RESET tokens (|)."""
         # | - cascade reset, go back one level
         position += 1
-        if (
-            position >= len(tokens)
-            or tokens[position].type == DeclarativeTokenType.EOF
-        ):
+        if position >= len(tokens) or tokens[position].type == DeclarativeTokenType.EOF:
             raise DeclarativeParseError("Expected node after cascade reset")
 
         # Check if we can reset (need at least 2 items: root + current)
@@ -283,10 +282,7 @@ class DeclarativeParser:
         """Handle SIBLING_SEPARATOR tokens (space)."""
         # Space separator - create sibling at same level
         position += 1
-        if (
-            position >= len(tokens)
-            or tokens[position].type == DeclarativeTokenType.EOF
-        ):
+        if position >= len(tokens) or tokens[position].type == DeclarativeTokenType.EOF:
             raise DeclarativeParseError("Expected node after sibling separator")
 
         # Create sibling at the same level (parent of current)
@@ -311,151 +307,7 @@ class DeclarativeParser:
                 token,
             )
         else:
-            raise DeclarativeParseError(
-                f"Unexpected token: {token.type.value}", token
-            )
-
-    def _handle_name_token(
-        self,
-        tokens: list[DeclarativeToken],
-        position: int,
-        current_node: DeclarativeNode,
-        node_stack: list[DeclarativeNode]
-    ) -> tuple[int, DeclarativeNode]:
-        """Handle NAME, DIRECTORY_HINT, or FILE_HINT tokens."""
-        child_node = self._parse_single_node(tokens, position)
-        position += 1
-
-        # Validate and add to current level
-        self._validate_parent_child_relationship(
-            current_node, child_node, tokens[position - 1]
-        )
-        current_node.add_child(child_node)
-
-        # Directories become context for potential children
-        if child_node.infer_type():  # True for directories
-            # Push current to stack and make child the new current
-            node_stack.append(current_node)
-            current_node = child_node
-        # Files never become context, stay at current level
-
-        return position, current_node
-
-    def _handle_separator_token(
-        self,
-        tokens: list[DeclarativeToken],
-        position: int,
-        current_node: DeclarativeNode,
-        node_stack: list[DeclarativeNode]
-    ) -> tuple[int, DeclarativeNode]:
-        """Handle SEPARATOR tokens (>)."""
-        position += 1
-        if (
-            position >= len(tokens)
-            or tokens[position].type == DeclarativeTokenType.EOF
-        ):
-            raise DeclarativeParseError("Expected node after separator")
-
-        child_node = self._parse_single_node(tokens, position)
-        position += 1
-
-        # Validate semantic correctness before adding child
-        self._validate_parent_child_relationship(
-            current_node, child_node, tokens[position - 1]
-        )
-        current_node.add_child(child_node)
-
-        # Push current to stack and make child the new current
-        node_stack.append(current_node)
-        current_node = child_node
-
-        return position, current_node
-
-    def _handle_cascade_reset_token(
-        self,
-        tokens: list[DeclarativeToken],
-        position: int,
-        root_node: DeclarativeNode,
-        node_stack: list[DeclarativeNode]
-    ) -> tuple[int, DeclarativeNode, list[DeclarativeNode]]:
-        """Handle CASCADE_RESET tokens (|)."""
-        position += 1
-        if (
-            position >= len(tokens)
-            or tokens[position].type == DeclarativeTokenType.EOF
-        ):
-            raise DeclarativeParseError("Expected node after cascade reset")
-
-        # Check if we can reset (need at least 2 items: root + current)
-        if len(node_stack) <= 1:
-            raise DeclarativeParseError("Cannot cascade reset beyond root")
-
-        # Pop back one level - this is the CASCADE_RESET behavior
-        node_stack.pop()  # Remove current level
-        parent_node = node_stack[-1]  # Get parent level (where we reset to)
-
-        # Parse the target node after cascade reset
-        target_node = self._parse_single_node(tokens, position)
-        position += 1
-
-        # Try to find existing node with this name in the tree (global search)
-        found_node = self._find_existing_node(root_node, target_node.name)
-
-        if found_node:
-            # Navigate to existing node
-            current_node = found_node
-            # Rebuild node_stack to reflect current path
-            node_stack = self._build_node_stack(root_node, found_node)
-        else:
-            # Create new node at parent level (one level up from where we were)
-            self._validate_parent_child_relationship(
-                parent_node, target_node, tokens[position - 1]
-            )
-            parent_node.add_child(target_node)
-            current_node = target_node
-            # node_stack already correct - parent is at top
-
-        return position, current_node, node_stack
-
-    def _handle_sibling_separator_token(
-        self,
-        tokens: list[DeclarativeToken],
-        position: int,
-        node_stack: list[DeclarativeNode]
-    ) -> tuple[int, DeclarativeNode]:
-        """Handle SIBLING_SEPARATOR tokens (space)."""
-        position += 1
-        if (
-            position >= len(tokens)
-            or tokens[position].type == DeclarativeTokenType.EOF
-        ):
-            raise DeclarativeParseError("Expected node after sibling separator")
-
-        # Create sibling at the same level (parent of current)
-        if len(node_stack) < 1:
-            raise DeclarativeParseError("Cannot create sibling without parent")
-
-        parent_node = node_stack[-1]  # Get parent without popping
-        sibling_node = self._parse_single_node(tokens, position)
-        position += 1
-        parent_node.add_child(sibling_node)
-        current_node = sibling_node
-
-        return position, current_node
-
-    def _handle_unexpected_token(self, token: DeclarativeToken) -> None:
-        """Handle unexpected tokens with appropriate error messages."""
-        # Special case: detect consecutive names (common error)
-        if token.type == DeclarativeTokenType.NAME:
-            raise DeclarativeParseError(
-                f"Unexpected name '{token.value}'. "
-                f"Use spaces to create siblings: 'parent > child1 child2'",
-                token,
-            )
-        else:
-            raise DeclarativeParseError(
-                f"Unexpected token: {token.type.value}", token
-            )
+            raise DeclarativeParseError(f"Unexpected token: {token.type.value}", token)
 
     def _parse_single_node(
         self, tokens: list[DeclarativeToken], position: int

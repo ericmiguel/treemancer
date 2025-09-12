@@ -28,7 +28,7 @@ class TestDeclarativeCLI:
                 "-m",
                 "treemancer.cli",
                 "from-syntax",
-                "project > d(src) > main.py > d(utils) > helper.py",
+                "project > d(src) > main.py | d(utils) > helper.py",
                 "--dry-run",
             ],
             capture_output=True,
@@ -49,7 +49,7 @@ class TestDeclarativeCLI:
                 "-m",
                 "treemancer.cli",
                 "from-syntax",
-                "app > d(src) > f(main.py) > d(tests) > f(test_main.py)",
+                "app > d(src) > f(main.py) | d(tests) > f(test_main.py)",
                 "--dry-run",
             ],
             capture_output=True,
@@ -102,15 +102,13 @@ class TestDeclarativeCLI:
 
             assert result.returncode == 0
 
-            # Verify structure was created (tests is a child of src due to
-            # cascade reset)
+            # Verify structure was created (tests is sibling of src due to
+            # cascade reset going back to testproject)
             assert (output_path / "testproject").is_dir()
             assert (output_path / "testproject" / "src").is_dir()
-            assert (output_path / "testproject" / "src" / "tests").is_dir()
+            assert (output_path / "testproject" / "tests").is_dir()
             assert (output_path / "testproject" / "src" / "app.py").exists()
-            assert (
-                output_path / "testproject" / "src" / "tests" / "test_app.py"
-            ).exists()
+            assert (output_path / "testproject" / "tests" / "test_app.py").exists()
 
     def test_from_syntax_no_files_option(self):
         """Test --no-files option with declarative syntax."""
@@ -135,15 +133,15 @@ class TestDeclarativeCLI:
 
             assert result.returncode == 0
 
-            # Verify only directories were created (docs is a child of src
-            # due to cascade reset)
+            # Verify only directories were created (docs is sibling of src
+            # due to cascade reset going back to project)
             assert (output_path / "project").is_dir()
             assert (output_path / "project" / "src").is_dir()
-            assert (output_path / "project" / "src" / "docs").is_dir()
+            assert (output_path / "project" / "docs").is_dir()
 
             # Verify no files were created
             assert not (output_path / "project" / "src" / "main.py").exists()
-            assert not (output_path / "project" / "src" / "docs" / "readme.md").exists()
+            assert not (output_path / "project" / "docs" / "readme.md").exists()
 
     def test_from_syntax_to_diagram(self):
         """Test --to-diagram option converts syntax to tree diagram."""

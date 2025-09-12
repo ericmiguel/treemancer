@@ -20,16 +20,18 @@ class TestDeclarativeLexer:
     def test_simple_names(self):
         """Test tokenizing simple names."""
         result = self.lexer.tokenize("root src main.py")
-        tokens = self.lexer.filter_whitespace(result.tokens)
+        tokens = result.tokens
 
-        assert len(tokens) == 4  # 3 names + EOF
+        assert len(tokens) == 6  # 3 names + 2 separators + EOF
         assert tokens[0].type == DeclarativeTokenType.NAME
         assert tokens[0].value == "root"
-        assert tokens[1].type == DeclarativeTokenType.NAME
-        assert tokens[1].value == "src"
+        assert tokens[1].type == DeclarativeTokenType.SIBLING_SEPARATOR
         assert tokens[2].type == DeclarativeTokenType.NAME
-        assert tokens[2].value == "main.py"
-        assert tokens[3].type == DeclarativeTokenType.EOF
+        assert tokens[2].value == "src"
+        assert tokens[3].type == DeclarativeTokenType.SIBLING_SEPARATOR
+        assert tokens[4].type == DeclarativeTokenType.NAME
+        assert tokens[4].value == "main.py"
+        assert tokens[5].type == DeclarativeTokenType.EOF
 
     def test_separators_and_groupers(self):
         """Test tokenizing separators and groupers."""
@@ -160,9 +162,7 @@ class TestDeclarativeParser:
 
     def test_complex_structure(self):
         """Test parsing complex project structure."""
-        text = (
-            "project > src > d(utils) > f(helpers.py) | f(validators.py) | f(main.py)"
-        )
+        text = "project > src > d(utils) > f(helpers.py) | f(validators.py) f(main.py)"
         tree = self.parser.parse(text)
 
         # Check root
@@ -172,22 +172,22 @@ class TestDeclarativeParser:
         # Check src directory
         src = tree.root.get_child("src")
         assert isinstance(src, DirectoryNode)
-        assert len(src.children) == 2  # utils directory and main.py file
+        assert len(src.children) == 3  # utils directory, validators.py and main.py
 
         # Check utils directory
         utils = src.get_child("utils")
         assert isinstance(utils, DirectoryNode)
-        assert len(utils.children) == 2  # helpers.py and validators.py
+        assert len(utils.children) == 1  # only helpers.py
 
         # Check files
+        validators_py = src.get_child("validators.py")
+        assert isinstance(validators_py, FileNode)
+
         main_py = src.get_child("main.py")
         assert isinstance(main_py, FileNode)
 
         helpers = utils.get_child("helpers.py")
         assert isinstance(helpers, FileNode)
-
-        validators = utils.get_child("validators.py")
-        assert isinstance(validators, FileNode)
 
     def test_validation(self):
         """Test syntax validation."""
@@ -237,7 +237,7 @@ class TestDeclarativeIntegration:
         assert isinstance(tree.root, DirectoryNode)
         assert tree.root.name == "my-project"
 
-        # Check structure: my-project/src/components/Button.tsx and Header.tsx
+        # Check structure: my-project/src/components/Button.tsx and src/Header.tsx
         src = tree.root.get_child("src")
         assert isinstance(src, DirectoryNode)
 
@@ -245,8 +245,10 @@ class TestDeclarativeIntegration:
         assert isinstance(components, DirectoryNode)
 
         button = components.get_child("Button.tsx")
-        header = components.get_child("Header.tsx")
         assert isinstance(button, FileNode)
+
+        # Header.tsx should be sibling of components in src due to cascade up
+        header = src.get_child("Header.tsx")
         assert isinstance(header, FileNode)
 
     def test_cascade_reset_beyond_root_error(self):
@@ -267,7 +269,7 @@ class TestDeclarativeIntegration:
         # project/
         #   src/
         #     file1.py
-        #     file2.py
+        #   file2.py
         #   tests/
         #     test1.py
         syntax = "project > src > file1.py | file2.py | tests > test1.py"
@@ -280,11 +282,13 @@ class TestDeclarativeIntegration:
         # Check src directory
         src = tree.root.get_child("src")
         assert isinstance(src, DirectoryNode)
-        assert len(src.children) == 2
+        assert len(src.children) == 1
 
         file1 = src.get_child("file1.py")
-        file2 = src.get_child("file2.py")
         assert isinstance(file1, FileNode)
+
+        # Check file2.py at project level
+        file2 = tree.root.get_child("file2.py")
         assert isinstance(file2, FileNode)
 
         # Check tests directory
@@ -335,10 +339,10 @@ class TestDeclarativeTreeDiagram:
 
         expected = (
             "└── project/\n"
-            "    └── src/\n"
-            "        ├── main.py\n"
-            "        └── tests/\n"
-            "            └── test_main.py"
+            "    ├── src/\n"
+            "    │   └── main.py\n"
+            "    └── tests/\n"
+            "        └── test_main.py"
         )
         assert diagram == expected
 
@@ -353,18 +357,18 @@ class TestDeclarativeTreeDiagram:
         expected = (
             "└── webapp/\n"
             "    ├── src/\n"
-            "    │   ├── app.py\n"
-            "    │   └── models.py\n"
-            "    └── tests/\n"
-            "        ├── test_app.py\n"
-            "        └── test_models.py"
+            "    │   └── app.py\n"
+            "    ├── models.py\n"
+            "    ├── tests/\n"
+            "    │   └── test_app.py\n"
+            "    └── test_models.py"
         )
         assert diagram == expected
 
     def test_round_trip_compatibility(self):
         """Test that declarative → diagram → declarative maintains structure."""
         original_syntax = (
-            "project > d(src) > main.py > utils.py | d(tests) > test_main.py"
+            "project > d(src) > main.py utils.py | d(tests) > test_main.py"
         )
 
         # Convert to diagram
