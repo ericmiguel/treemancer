@@ -1,4 +1,4 @@
-"""Tests for parser modules."""
+"""Tests for tree diagram parser."""
 
 import pytest
 

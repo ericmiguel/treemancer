@@ -1,11 +1,11 @@
-"""Tests for the TreeMancer lexer."""
+"""Tests for the TreeMancer diagram language lexer."""
 
 from treemancer.languages.diagram import TokenType
 from treemancer.languages.diagram import TreeLexer
 
 
-class TestTreeLexer:
-    """Test cases for TreeLexer."""
+class TestDiagramLexer:
+    """Test cases for TreeMancer diagram language lexer."""
 
     def setup_method(self) -> None:
         """Set up test fixtures."""

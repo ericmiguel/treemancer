@@ -4,10 +4,9 @@ from pathlib import Path
 
 import pytest
 
+from tests.conftest import MockConsole
 from treemancer.creator import TreeCreator
 from treemancer.models import FileSystemTree
-
-from .conftest import MockConsole
 
 
 class TestTreeCreator:

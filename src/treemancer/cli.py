@@ -12,6 +12,7 @@ import typer
 from treemancer.creator import TreeCreator
 from treemancer.languages import DeclarativeParser
 from treemancer.languages import TreeDiagramParser
+from treemancer.models import FileSystemNode
 
 
 app = typer.Typer(
@@ -332,11 +333,11 @@ def _handle_syntax_input(
         progress.remove_task(create_task)
 
 
-def _count_nodes(node: object) -> int:
+def _count_nodes(node: FileSystemNode) -> int:
     """Count total nodes in tree."""
     count = 1  # Count current node
     if hasattr(node, "children"):
-        for child in node.children:  # type: ignore
+        for child in node.children:
             count += _count_nodes(child)
     return count
 

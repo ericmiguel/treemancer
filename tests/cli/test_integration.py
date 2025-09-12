@@ -1,11 +1,11 @@
-"""Tests for CLI declarative syntax integration."""
+"""Tests for CLI integration with declarative syntax."""
 
 from pathlib import Path
 import subprocess
 import tempfile
 
 
-class TestDeclarativeCLI:
+class TestCliIntegration:
     """Test CLI integration with declarative syntax."""
 
     def test_create_help(self):

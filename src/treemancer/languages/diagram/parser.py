@@ -306,7 +306,7 @@ class TreeDiagramParser:
         if len(lines) < 2:
             return True  # Single line is valid
 
-        indentations = []
+        indentations: list[int] = []
         for line in lines:
             # Count leading whitespace
             leading_spaces = len(line) - len(line.lstrip())

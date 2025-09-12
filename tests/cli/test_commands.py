@@ -1,4 +1,4 @@
-"""Tests for CLI module."""
+"""Tests for CLI commands."""
 
 from pathlib import Path
 
@@ -7,8 +7,8 @@ from typer.testing import CliRunner
 from treemancer.cli import app
 
 
-class TestCLI:
-    """Test cases for CLI interface."""
+class TestCliCommands:
+    """Test cases for CLI interface commands."""
 
     def setup_method(self) -> None:
         """Set up test fixtures."""
@@ -21,9 +21,7 @@ class TestCLI:
         assert result.exit_code == 0
         assert "Tree Creator version" in result.stdout
 
-    def test_from_file_command(
-        self, sample_markdown_file: Path, temp_dir: Path
-    ) -> None:
+    def test_diagram_command(self, sample_markdown_file: Path, temp_dir: Path) -> None:
         """Test diagram command with markdown file."""
         result = self.runner.invoke(
             app,
@@ -40,7 +38,7 @@ class TestCLI:
         assert "Found" in result.stdout
         assert "tree(s)" in result.stdout
 
-    def test_from_file_all_trees(
+    def test_diagram_all_trees(
         self, sample_markdown_file: Path, temp_dir: Path
     ) -> None:
         """Test diagram command with all-trees option."""
@@ -59,9 +57,7 @@ class TestCLI:
         assert result.exit_code == 0
         assert "Found" in result.stdout
 
-    def test_from_file_no_files(
-        self, sample_markdown_file: Path, temp_dir: Path
-    ) -> None:
+    def test_diagram_no_files(self, sample_markdown_file: Path, temp_dir: Path) -> None:
         """Test diagram command with no-files option."""
         result = self.runner.invoke(
             app,
@@ -77,12 +73,54 @@ class TestCLI:
 
         assert result.exit_code == 0
 
-    def test_from_file_nonexistent(self) -> None:
+    def test_diagram_nonexistent(self) -> None:
         """Test diagram command with nonexistent file."""
         result = self.runner.invoke(app, ["diagram", "nonexistent.md"])
 
         assert result.exit_code == 1
-        # Error message is displayed after spinner, checking exit code is sufficient
+        # The error message is in stderr or printed after spinner, check exit code
+
+    def test_preview_command(self, sample_markdown_file: Path) -> None:
+        """Test preview command shows tree structure."""
+        result = self.runner.invoke(
+            app,
+            [
+                "preview",
+                str(sample_markdown_file),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Tree Preview" in result.stdout or any(
+            c in result.stdout for c in ["├", "└", "│"]
+        )
+
+    def test_check_command_valid_syntax(self) -> None:
+        """Test check command with valid syntax."""
+        result = self.runner.invoke(
+            app,
+            [
+                "check",
+                "project > src > main.py | tests > test.py",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Syntax is valid!" in result.stdout
+        assert "nodes" in result.stdout
+
+    def test_check_command_invalid_syntax(self) -> None:
+        """Test check command with invalid syntax."""
+        result = self.runner.invoke(
+            app,
+            [
+                "check",
+                "invalid > > missing_name",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert "Syntax error:" in result.stdout or "error" in result.stdout.lower()
 
     def test_help_commands(self) -> None:
         """Test help output contains expected information."""
@@ -116,19 +154,3 @@ class TestCLI:
 
         # Check that directories were created
         assert any(temp_dir.iterdir())  # Something was created
-
-    def test_preview_option(self, sample_markdown_file: Path) -> None:
-        """Test preview command shows tree structure."""
-        result = self.runner.invoke(
-            app,
-            [
-                "preview",
-                str(sample_markdown_file),
-            ],
-        )
-
-        assert result.exit_code == 0
-        assert (
-            any(c in result.stdout for c in ["├", "└", "│"])
-            or "Tree Preview" in result.stdout
-        )

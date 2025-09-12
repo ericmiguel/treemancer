@@ -200,7 +200,7 @@ class TreeLexer:
         str
             Extracted name
         """
-        name_parts = []
+        name_parts: list[str] = []
         found_name = False
 
         for token in line_tokens:
