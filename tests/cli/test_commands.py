@@ -21,12 +21,12 @@ class TestCliCommands:
         assert result.exit_code == 0
         assert "Treemancer version" in result.stdout
 
-    def test_diagram_command(self, sample_markdown_file: Path, temp_dir: Path) -> None:
-        """Test diagram command with markdown file."""
+    def test_create_command(self, sample_markdown_file: Path, temp_dir: Path) -> None:
+        """Test create command with markdown file."""
         result = self.runner.invoke(
             app,
             [
-                "diagram",
+                "create",
                 str(sample_markdown_file),
                 "--output",
                 str(temp_dir),
@@ -38,14 +38,12 @@ class TestCliCommands:
         assert "Found" in result.stdout
         assert "tree(s)" in result.stdout
 
-    def test_diagram_all_trees(
-        self, sample_markdown_file: Path, temp_dir: Path
-    ) -> None:
-        """Test diagram command with all-trees option."""
+    def test_create_all_trees(self, sample_markdown_file: Path, temp_dir: Path) -> None:
+        """Test create command with all-trees option."""
         result = self.runner.invoke(
             app,
             [
-                "diagram",
+                "create",
                 str(sample_markdown_file),
                 "--output",
                 str(temp_dir),
@@ -57,12 +55,12 @@ class TestCliCommands:
         assert result.exit_code == 0
         assert "Found" in result.stdout
 
-    def test_diagram_no_files(self, sample_markdown_file: Path, temp_dir: Path) -> None:
-        """Test diagram command with no-files option."""
+    def test_create_no_files(self, sample_markdown_file: Path, temp_dir: Path) -> None:
+        """Test create command with no-files option."""
         result = self.runner.invoke(
             app,
             [
-                "diagram",
+                "create",
                 str(sample_markdown_file),
                 "--output",
                 str(temp_dir),
@@ -73,11 +71,12 @@ class TestCliCommands:
 
         assert result.exit_code == 0
 
-    def test_diagram_nonexistent(self) -> None:
-        """Test diagram command with nonexistent file."""
-        result = self.runner.invoke(app, ["diagram", "nonexistent.md"])
+    def test_create_invalid_syntax(self) -> None:
+        """Test create command with invalid syntax."""
+        result = self.runner.invoke(app, ["create", "invalid > > missing_name"])
 
         assert result.exit_code == 1
+        assert "error" in result.stdout.lower() or "failed" in result.stdout.lower()
         # The error message is in stderr or printed after spinner, check exit code
 
     def test_preview_command(self, sample_markdown_file: Path) -> None:
@@ -129,14 +128,14 @@ class TestCliCommands:
         assert result.exit_code == 0
         assert "TreeMancer - directory structures from text" in result.stdout
 
-        # diagram help
-        result = self.runner.invoke(app, ["diagram", "--help"])
+        # create help
+        result = self.runner.invoke(app, ["create", "--help"])
         assert result.exit_code == 0
-        assert "diagram" in result.stdout.lower()
+        assert "create" in result.stdout.lower()
 
     def test_commands_without_args(self) -> None:
         """Test commands show help when called without required arguments."""
-        result = self.runner.invoke(app, ["diagram"])
+        result = self.runner.invoke(app, ["create"])
 
         # Should show error about missing argument
         assert result.exit_code == 2
@@ -147,7 +146,7 @@ class TestCliCommands:
         """Test actually creating directory structure."""
         result = self.runner.invoke(
             app,
-            ["diagram", str(sample_markdown_file), "--output", str(temp_dir)],
+            ["create", str(sample_markdown_file), "--output", str(temp_dir)],
         )
 
         assert result.exit_code == 0

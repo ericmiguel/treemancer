@@ -6,9 +6,11 @@ from typing import Annotated
 from typing import Tuple
 
 from rich.console import Console
+from rich.panel import Panel
 from rich.progress import Progress
 from rich.progress import SpinnerColumn
 from rich.progress import TextColumn
+from rich.syntax import Syntax
 import typer
 
 from treemancer.creator import MultipleCreationResult
@@ -117,55 +119,37 @@ def create(
 
 @app.command("preview")
 def preview_structure(
-    input_source: Annotated[
-        str, typer.Argument(help="Declarative syntax or path to file")
-    ],
-    all_trees: Annotated[
-        bool, typer.Option("--all-trees", help="Preview all trees found in file")
-    ] = False,
+    syntax: Annotated[str, typer.Argument(help="Declarative syntax to preview")],
 ) -> None:
     """
     Preview directory structure [bold]without creating it[/bold].
 
-    Shows what the structure would look like before actually creating files
-    and directories.
+    Shows what the structure would look like for declarative syntax.
+    For previewing files, use the [cyan]--dry-run[/cyan] flag with other commands.
 
     [bold yellow]Examples[/bold yellow]
     [green]treemancer preview[/green] [cyan]"project > src > main.py | tests"[/cyan]
-    [green]treemancer preview[/green] [cyan]structure.md --all-trees[/cyan]
+    [green]treemancer preview[/green] [cyan]"webapp > src > main.py utils.py"[/cyan]
+
+    [bold yellow]For files, use:[/bold yellow]
+    [green]treemancer create[/green] [cyan]structure.md --dry-run[/cyan]
+    [green]treemancer diagram[/green] [cyan]structure.md --dry-run[/cyan]
     """
     creator = TreeCreator(console)
 
     try:
-        input_path = Path(input_source)
+        # Only handle declarative syntax - simpler and clearer purpose
+        parser = DeclarativeParser()
+        tree = parser.parse(syntax)
+        console.print("\n[bold yellow]🔍 Structure Preview:[/bold yellow]")
+        creator.display_tree_preview(tree)
 
-        if input_path.exists() and input_path.is_file():
-            # Handle as file
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=console,
-            ) as progress:
-                parse_task = progress.add_task("Parsing tree diagram(s)...", total=None)
-
-                parser = TreeDiagramParser()
-                trees = parser.parse_file(input_path, all_trees)
-
-                progress.remove_task(parse_task)
-
-                for i, tree in enumerate(trees, 1):
-                    if len(trees) > 1:
-                        console.print(f"\n[bold yellow]Tree {i}:[/bold yellow]")
-                    creator.display_tree_preview(tree)
-        else:
-            # Handle as syntax
-            parser = DeclarativeParser()
-            tree = parser.parse(input_source)
-            console.print("\n[bold yellow]Tree Preview:[/bold yellow]")
-            creator.display_tree_preview(tree)
+        # Show quick stats
+        stats_table = creator.create_file_statistics_table(tree)
+        console.print(stats_table)
 
     except Exception as e:
-        console.print(f"[red]Error:[/red] {e}")
+        console.print(f"[red]Preview Error:[/red] {e}")
         raise typer.Exit(1) from e
 
 
@@ -198,47 +182,119 @@ def check(
 
     except Exception as e:
         console.print(f"[red]Syntax error:[/red] {e}")
-        console.print("\n[yellow]Syntax help:[/yellow]")
-        console.print("- Use > to go deeper: project > src > main.py")
-        console.print("- Use spaces to create siblings: app > file1.py file2.py")
-        console.print("- Use | to go back up: root > sub > file | another_file")
-        console.print("- Use d(name) for directories: d(mydir)")
-        console.print("- Use f(name) for files: f(myfile.txt)")
+
+        # Show syntax help with highlighted examples
+        console.print("\n[bold yellow]📚 Syntax Guide[/bold yellow]")
+
+        examples = """
+# Basic structure
+project > src > main.py
+
+# Multiple files in same directory  
+app > file1.py file2.py config.json
+
+# Going back up levels
+root > sub > deep_file.py | another_file.py
+
+# Force types
+project > d(assets) f(README.md) > src > main.py
+
+# Real world example
+webapp > src > main.py utils.py | tests > test_main.py | docs > README.md
+        """.strip()
+
+        syntax_display = Syntax(examples, "bash", theme="monokai", line_numbers=True)
+        console.print(syntax_display)
+
+        # Quick reference table
+        from rich.table import Table
+
+        help_table = Table(title="🔧 Quick Reference")
+        help_table.add_column("Operator", style="cyan", no_wrap=True)
+        help_table.add_column("Description", style="white")
+        help_table.add_column("Example", style="green")
+
+        help_table.add_row(">", "Go deeper", "parent > child")
+        help_table.add_row("|", "Go back up", "deep > file | sibling")
+        help_table.add_row("space", "Create siblings", "file1.py file2.py")
+        help_table.add_row("d()", "Force directory", "d(assets)")
+        help_table.add_row("f()", "Force file", "f(README)")
+
+        console.print(help_table)
         raise typer.Exit(1) from e
 
 
 @app.command()
-def diagram(
-    file_path: Annotated[
-        Path, typer.Argument(help="Path to file containing tree diagram(s)")
+def stats(
+    input_source: Annotated[
+        str, typer.Argument(help="Declarative syntax or path to file")
     ],
-    output: Annotated[
-        Path, typer.Option("--output", "-o", help="Output directory")
-    ] = Path("."),
     all_trees: Annotated[
-        bool, typer.Option("--all-trees", help="Create all trees found in file")
-    ] = False,
-    no_files: Annotated[
-        bool, typer.Option("--no-files", help="Create only directories, skip files")
-    ] = False,
-    dry_run: Annotated[
-        bool,
-        typer.Option("--dry-run", help="Show what would be created without creating"),
+        bool, typer.Option("--all-trees", help="Show stats for all trees in file")
     ] = False,
 ) -> None:
     """
-    Create directory structure from [bold]tree diagrams[/bold] in files.
+    Show detailed [bold]statistics[/bold] about the directory structure.
 
-    Reads tree diagrams from markdown/txt files and creates the corresponding
-    directory structure. Supports various tree diagram formats including
-    ASCII trees and markdown-style trees.
+    Analyzes the structure and shows file type distribution, directory counts,
+    and other useful metrics without creating anything.
 
     [bold yellow]Examples[/bold yellow]
-    [green]treemancer diagram[/green] [cyan]project-structure.md[/cyan]
-    [green]treemancer diagram[/green] [cyan]README.md --all-trees[/cyan]
+    [green]treemancer stats[/green] [cyan]"project > src > main.py config.json"[/cyan]
+    [green]treemancer stats[/green] [cyan]project-structure.md[/cyan]
     """
     creator = TreeCreator(console)
-    _handle_diagram_file(creator, file_path, output, not no_files, dry_run, all_trees)
+
+    try:
+        input_type, file_path = detect_input_type(input_source)
+
+        if input_type == InputType.DECLARATIVE_SYNTAX:
+            # Parse declarative syntax
+            parser = DeclarativeParser()
+            tree = parser.parse(input_source)
+
+            # Show tree preview and stats
+            console.print("\n[bold yellow]📊 Structure Analysis[/bold yellow]")
+            creator.display_tree_preview(tree)
+
+            # Show file statistics table
+            stats_table = creator.create_file_statistics_table(tree)
+            console.print(stats_table)
+
+        elif file_path and file_path.exists():
+            # Handle file input
+            if input_type == InputType.SYNTAX_FILE:
+                syntax_content = read_syntax_file(file_path)
+                parser = DeclarativeParser()
+                tree = parser.parse(syntax_content)
+
+                console.print(f"\n[blue]📄 Analyzing syntax file: {file_path}[/blue]")
+                creator.display_tree_preview(tree)
+                stats_table = creator.create_file_statistics_table(tree)
+                console.print(stats_table)
+
+            else:  # DIAGRAM_FILE
+                parser = TreeDiagramParser()
+                trees = parser.parse_file(file_path, all_trees)
+
+                console.print(
+                    f"\n[blue]📄 Analyzing {len(trees)} tree(s) "
+                    f"from: {file_path}[/blue]"
+                )
+
+                for i, tree in enumerate(trees, 1):
+                    if len(trees) > 1:
+                        console.print(
+                            f"\n[bold yellow]🌳 Tree {i} Analysis:[/bold yellow]"
+                        )
+
+                    creator.display_tree_preview(tree)
+                    stats_table = creator.create_file_statistics_table(tree)
+                    console.print(stats_table)
+
+    except Exception as e:
+        console.print(f"[red]Analysis Error:[/red] {e}")
+        raise typer.Exit(1) from e
 
 
 # ============================================================================
@@ -467,17 +523,45 @@ def _handle_diagram_file(
 def _print_multiple_trees_summary(
     results_list: list[MultipleCreationResult], tree_count: int
 ) -> None:
-    """Print summary for multiple trees creation."""
+    """Print summary for multiple trees creation using Rich panels."""
     total_dirs = sum(r["directories_created"] for r in results_list)
     total_files = sum(r["files_created"] for r in results_list)
     total_errors = sum(len(r["errors"]) for r in results_list)
+    total_items = total_dirs + total_files
 
-    console.print("\n[bold yellow]Overall Summary:[/bold yellow]")
-    console.print(f"Trees created: [blue]{tree_count}[/blue]")
-    console.print(f"Total directories: [blue]{total_dirs}[/blue]")
-    console.print(f"Total files: [green]{total_files}[/green]")
+    # Build summary content
+    summary_lines: list[str] = [
+        f"🌳 Trees processed: [bold blue]{tree_count}[/bold blue]",
+        f"📁 Total directories: [bold blue]{total_dirs}[/bold blue]",
+        f"📄 Total files: [bold green]{total_files}[/bold green]",
+        f"✨ Total items: [bold cyan]{total_items}[/bold cyan]",
+    ]
+
+    summary_content = "\n".join(summary_lines)
+
     if total_errors:
-        console.print(f"[red]Total errors: {total_errors}[/red]")
+        # Show summary with error indicator
+        console.print(
+            Panel(
+                summary_content,
+                title=(
+                    f"[bold yellow]📊 Multiple Trees Summary[/bold yellow] "
+                    f"[red]({total_errors} errors)[/red]"
+                ),
+                border_style="yellow",
+                padding=(1, 2),
+            )
+        )
+    else:
+        # Clean success summary
+        console.print(
+            Panel(
+                summary_content,
+                title="[bold green]📊 Multiple Trees Summary[/bold green]",
+                border_style="green",
+                padding=(1, 2),
+            )
+        )
 
 
 if __name__ == "__main__":
