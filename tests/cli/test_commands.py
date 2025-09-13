@@ -94,12 +94,12 @@ class TestCliCommands:
             c in result.stdout for c in ["├", "└", "│"]
         )
 
-    def test_check_command_valid_syntax(self) -> None:
-        """Test check command with valid syntax."""
+    def test_preview_command_valid_syntax(self) -> None:
+        """Test preview command with valid syntax shows validation and preview."""
         result = self.runner.invoke(
             app,
             [
-                "check",
+                "preview",
                 "project > src > main.py | tests > test.py",
             ],
         )
@@ -107,19 +107,21 @@ class TestCliCommands:
         assert result.exit_code == 0
         assert "Syntax is valid!" in result.stdout
         assert "nodes" in result.stdout
+        assert "Structure Preview:" in result.stdout
 
-    def test_check_command_invalid_syntax(self) -> None:
-        """Test check command with invalid syntax."""
+    def test_preview_command_invalid_syntax(self) -> None:
+        """Test preview command with invalid syntax shows detailed error report."""
         result = self.runner.invoke(
             app,
             [
-                "check",
+                "preview",
                 "invalid > > missing_name",
             ],
         )
 
         assert result.exit_code == 1
-        assert "Syntax error:" in result.stdout or "error" in result.stdout.lower()
+        assert "Syntax is invalid!" in result.stdout
+        assert "Syntax Help:" in result.stdout
 
     def test_help_commands(self) -> None:
         """Test help output contains expected information."""

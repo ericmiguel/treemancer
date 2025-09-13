@@ -115,6 +115,8 @@ def create(
 
 
 @app.command("preview")
+@app.command("check")
+@app.command("parse")
 def preview_structure(
     input_source: Annotated[
         str, typer.Argument(help="Declarative syntax or path to file")
@@ -128,6 +130,7 @@ def preview_structure(
 
     Shows what the structure would look like for declarative syntax or files.
     Automatically detects input type and handles accordingly.
+    If syntax errors are found, shows detailed validation report.
 
     [bold yellow]Examples[/bold yellow]
 
@@ -153,41 +156,6 @@ def preview_structure(
     except Exception as e2:
         console.print(f"[red]Preview Error:[/red] {e2}")
         raise typer.Exit(1) from e2
-
-
-@app.command()
-def check(
-    syntax: Annotated[str, typer.Argument(help="Declarative syntax to validate")],
-) -> None:
-    """
-    Validate declarative syntax [bold]without creating structure[/bold].
-
-    Checks if the syntax is valid and shows helpful error messages if not.
-
-    [bold yellow]Examples[/bold yellow]
-    [green]treemancer check[/green] [cyan]"project > src > main.py | tests"[/cyan]
-    [green]treemancer check[/green] [cyan]"invalid > syntax > here"[/cyan]
-    """
-    try:
-        parser = DeclarativeParser()
-        # Validate syntax and get detailed info
-        result = parser.validate_syntax(syntax)
-
-        if result["valid"]:
-            console.print("[green]✓[/green] Syntax is valid!")
-            console.print(f"Structure contains {result['node_count']} nodes")
-        else:
-            console.print("[red]✗[/red] Syntax is invalid!")
-            for error in result["errors"]:
-                console.print(f"[red]Error:[/red] {error}")
-            raise typer.Exit(1)
-
-    except Exception as e:
-        console.print(f"[red]Syntax error:[/red] {e}")
-
-        # Show syntax help with highlighted examples
-        ui.print_syntax_help()
-        raise typer.Exit(1) from e
 
 
 # ============================================================================
@@ -427,19 +395,43 @@ def handle_preview_input(input_source: str, all_trees: bool = False) -> None:
 
 
 def _handle_preview_declarative_syntax(syntax: str) -> None:
-    """Handle preview of direct declarative syntax input."""
+    """Handle preview of direct declarative syntax input with detailed validation."""
+    parser = DeclarativeParser()
+
     try:
-        parser = DeclarativeParser()
-        tree = parser.parse(syntax)
-        console.print("\n[bold yellow]🔍 Structure Preview:[/bold yellow]")
-        ui.display_tree_preview(tree)
+        # First validate syntax and get detailed info
+        result = parser.validate_syntax(syntax)
 
-        # Show quick stats
-        stats_table = ui.create_file_statistics_table(tree)
-        console.print(stats_table)
+        if result["valid"]:
+            # If valid, parse and show preview
+            tree = parser.parse(syntax)
+            node_count = result["node_count"]
+            console.print(f"[green]✓[/green] Syntax is valid! ({node_count} nodes)")
+            console.print("\n[bold yellow]🔍 Structure Preview:[/bold yellow]")
+            ui.display_tree_preview(tree)
 
+            # Show quick stats
+            stats_table = ui.create_file_statistics_table(tree)
+            console.print(stats_table)
+        else:
+            # If invalid, show detailed validation report
+            console.print("[red]✗[/red] Syntax is invalid!")
+            for error in result["errors"]:
+                console.print(f"[red]Error:[/red] {error}")
+
+            # Show syntax help with highlighted examples
+            console.print("\n[yellow]💡 Syntax Help:[/yellow]")
+            ui.print_syntax_help()
+            raise typer.Exit(1)
+
+    except typer.Exit:
+        # Re-raise typer.Exit to preserve exit behavior
+        raise
     except Exception as e:
+        # Handle unexpected errors during validation or parsing
         console.print(f"[red]Syntax Error:[/red] {e}")
+        console.print("\n[yellow]💡 Syntax Help:[/yellow]")
+        ui.print_syntax_help()
         raise typer.Exit(1) from e
 
 
