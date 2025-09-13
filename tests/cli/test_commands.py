@@ -19,7 +19,7 @@ class TestCliCommands:
         result = self.runner.invoke(app, ["--version"])
 
         assert result.exit_code == 0
-        assert "Tree Creator version" in result.stdout
+        assert "Treemancer version" in result.stdout
 
     def test_diagram_command(self, sample_markdown_file: Path, temp_dir: Path) -> None:
         """Test diagram command with markdown file."""
@@ -127,7 +127,7 @@ class TestCliCommands:
         result = self.runner.invoke(app, ["--help"])
 
         assert result.exit_code == 0
-        assert "TreeMancer - Create directory structures from text" in result.stdout
+        assert "TreeMancer - directory structures from text" in result.stdout
 
         # diagram help
         result = self.runner.invoke(app, ["diagram", "--help"])

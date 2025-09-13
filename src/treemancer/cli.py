@@ -1,7 +1,9 @@
-"""CLI interface for Tree Creator."""
+"""CLI interface for Treemancer."""
 
+from enum import Enum
 from pathlib import Path
 from typing import Annotated
+from typing import Tuple
 
 from rich.console import Console
 from rich.progress import Progress
@@ -9,11 +11,10 @@ from rich.progress import SpinnerColumn
 from rich.progress import TextColumn
 import typer
 
+from treemancer.creator import MultipleCreationResult
 from treemancer.creator import TreeCreator
 from treemancer.languages import DeclarativeParser
 from treemancer.languages import TreeDiagramParser
-from treemancer.models import DirectoryNode
-from treemancer.models import FileSystemNode
 
 
 app = typer.Typer(
@@ -98,24 +99,10 @@ def create(
     creator = TreeCreator(console)
 
     try:
-        # Auto-detect input type and delegate to appropriate handler
-        input_path = Path(input_source)
-
-        if input_path.exists() and input_path.is_file():
-            # Check file extension to determine type
-            if input_path.suffix.lower() in [".tree", ".syntax"]:
-                # Handle as declarative syntax file
-                _handle_syntax_input(
-                    creator, input_source, output, not no_files, dry_run
-                )
-            else:
-                # Handle as tree diagram file
-                _handle_file_input(
-                    creator, input_path, output, all_trees, not no_files, dry_run
-                )
-        else:
-            # Handle as declarative syntax
-            _handle_syntax_input(creator, input_source, output, not no_files, dry_run)
+        # Use the new auto-detection system
+        handle_auto_detected_input(
+            creator, input_source, output, not no_files, dry_run, all_trees
+        )
 
     except typer.Exit:
         # Re-raise typer.Exit without modification (preserves exit code)
@@ -197,14 +184,17 @@ def check(
     """
     try:
         parser = DeclarativeParser()
-        # Simply try to parse - if it works, syntax is valid
-        tree = parser.parse(syntax)
+        # Validate syntax and get detailed info
+        result = parser.validate_syntax(syntax)
 
-        # Count nodes
-        node_count = _count_nodes(tree.root)
-
-        console.print("[green]✓[/green] Syntax is valid!")
-        console.print(f"Structure contains {node_count} nodes")
+        if result["valid"]:
+            console.print("[green]✓[/green] Syntax is valid!")
+            console.print(f"Structure contains {result['node_count']} nodes")
+        else:
+            console.print("[red]✗[/red] Syntax is invalid!")
+            for error in result["errors"]:
+                console.print(f"[red]Error:[/red] {error}")
+            raise typer.Exit(1)
 
     except Exception as e:
         console.print(f"[red]Syntax error:[/red] {e}")
@@ -248,71 +238,130 @@ def diagram(
     [green]treemancer diagram[/green] [cyan]README.md --all-trees[/cyan]
     """
     creator = TreeCreator(console)
-    _handle_file_input(creator, file_path, output, all_trees, not no_files, dry_run)
+    _handle_diagram_file(creator, file_path, output, not no_files, dry_run, all_trees)
 
 
-def _handle_file_input(
+# ============================================================================
+# Input Detection System
+# ============================================================================
+
+
+class InputType(Enum):
+    """Types of input that can be detected."""
+
+    DECLARATIVE_SYNTAX = "declarative_syntax"
+    SYNTAX_FILE = "syntax_file"  # .tree files
+    DIAGRAM_FILE = "diagram_file"  # .md, .txt files
+
+
+def detect_input_type(input_source: str) -> Tuple[InputType, Path | None]:
+    """
+    Automatically detect the type of input and return appropriate type.
+
+    Detection logic:
+    1. Check if input is an existing file path
+    2. If file exists, determine type by extension:
+       - .tree, .syntax → SYNTAX_FILE
+       - .md, .txt, others → DIAGRAM_FILE
+    3. If not a file, treat as DECLARATIVE_SYNTAX
+
+    Parameters
+    ----------
+    input_source : str
+        The input string to analyze
+
+    Returns
+    -------
+    Tuple[InputType, Path | None]
+        Input type and file path (if applicable)
+    """
+    # Convert to Path for analysis
+    potential_path = Path(input_source)
+
+    # Check if it's an existing file
+    if potential_path.exists() and potential_path.is_file():
+        # Determine file type by extension
+        extension = potential_path.suffix.lower()
+
+        if extension in [".tree", ".syntax"]:
+            return InputType.SYNTAX_FILE, potential_path
+        else:
+            # Assume any other file is a diagram file (.md, .txt, etc.)
+            return InputType.DIAGRAM_FILE, potential_path
+
+    # Not a file, treat as direct declarative syntax
+    return InputType.DECLARATIVE_SYNTAX, None
+
+
+def read_syntax_file(file_path: Path) -> str:
+    """
+    Read and validate syntax file content.
+
+    Parameters
+    ----------
+    file_path : Path
+        Path to the syntax file
+
+    Returns
+    -------
+    str
+        The syntax content
+
+    Raises
+    ------
+    FileNotFoundError
+        If file doesn't exist
+    ValueError
+        If file is empty or has encoding issues
+    """
+    try:
+        content = file_path.read_text(encoding="utf-8").strip()
+        if not content:
+            raise ValueError(f"Syntax file is empty: {file_path}")
+        return content
+    except UnicodeDecodeError as e:
+        msg = f"Cannot read syntax file (encoding issue): {file_path}"
+        raise ValueError(msg) from e
+
+
+# ============================================================================
+# Unified Input Handlers
+# ============================================================================
+
+
+def handle_auto_detected_input(
     creator: TreeCreator,
-    file_path: Path,
+    input_source: str,
     output: Path,
-    all_trees: bool,
     create_files: bool,
     dry_run: bool,
+    all_trees: bool = False,
 ) -> None:
-    """Handle input from file."""
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,
-    ) as progress:
-        parse_task = progress.add_task("Parsing tree diagram(s)...", total=None)
+    """
+    Handle input with automatic type detection.
 
-        parser = TreeDiagramParser()
-        trees = parser.parse_file(file_path, all_trees)
+    This is the main entry point for processing any input type.
+    """
+    input_type, file_path = detect_input_type(input_source)
 
-        progress.remove_task(parse_task)
-
-        console.print(f"[green]✓[/green] Found {len(trees)} tree(s) in {file_path}")
-
-        # Create structures
-        create_task = progress.add_task(
-            "Creating directory structure(s)...", total=None
+    if input_type == InputType.DECLARATIVE_SYNTAX:
+        _handle_declarative_syntax(creator, input_source, output, create_files, dry_run)
+    elif input_type == InputType.SYNTAX_FILE and file_path:
+        _handle_syntax_file(creator, file_path, output, create_files, dry_run)
+    elif input_type == InputType.DIAGRAM_FILE and file_path:
+        _handle_diagram_file(
+            creator, file_path, output, create_files, dry_run, all_trees
         )
 
-        if len(trees) == 1:
-            results = creator.create_structure(trees[0], output, create_files, dry_run)
-            creator.print_summary(results)
-        else:
-            results_list = creator.create_multiple_structures(
-                trees, output, create_files, dry_run
-            )
 
-            # Print combined summary
-            total_dirs = sum(r["directories_created"] for r in results_list)
-            total_files = sum(r["files_created"] for r in results_list)
-            total_errors = sum(len(r["errors"]) for r in results_list)
-
-            console.print("\n[bold yellow]Overall Summary:[/bold yellow]")
-            console.print(f"Trees created: [blue]{len(trees)}[/blue]")
-            console.print(f"Total directories: [blue]{total_dirs}[/blue]")
-            console.print(f"Total files: [green]{total_files}[/green]")
-            if total_errors:
-                console.print(f"[red]Total errors: {total_errors}[/red]")
-
-        progress.remove_task(create_task)
-
-
-def _handle_syntax_input(
+def _handle_declarative_syntax(
     creator: TreeCreator,
     syntax: str,
     output: Path,
     create_files: bool,
     dry_run: bool,
 ) -> None:
-    """Handle input from declarative syntax."""
-    # Resolve if it's a file path in disguise
-    syntax_content = _resolve_syntax_input(syntax)
-
+    """Handle direct declarative syntax input."""
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -320,86 +369,115 @@ def _handle_syntax_input(
     ) as progress:
         parse_task = progress.add_task("Parsing declarative syntax...", total=None)
 
-        parser = DeclarativeParser()
-        tree = parser.parse(syntax_content)
+        try:
+            parser = DeclarativeParser()
+            tree = parser.parse(syntax)
+            progress.remove_task(parse_task)
 
-        progress.remove_task(parse_task)
+            console.print("[green]✓[/green] Successfully parsed declarative syntax")
 
-        console.print("[green]✓[/green] Successfully parsed declarative syntax")
+            # Create structure
+            create_task = progress.add_task(
+                "Creating directory structure...", total=None
+            )
+            results = creator.create_structure(tree, output, create_files, dry_run)
+            creator.print_summary(results)
+            progress.remove_task(create_task)
 
-        # Create structure
-        create_task = progress.add_task("Creating directory structure...", total=None)
-
-        results = creator.create_structure(tree, output, create_files, dry_run)
-        creator.print_summary(results)
-
-        progress.remove_task(create_task)
-
-
-def _count_nodes(node: FileSystemNode) -> int:
-    """Count total nodes in tree."""
-    count = 1  # Count current node
-    if isinstance(node, DirectoryNode):
-        for child in node.children:
-            count += _count_nodes(child)
-    return count
+        except Exception as e:
+            progress.remove_task(parse_task)
+            console.print(f"[red]Syntax Error:[/red] {e}")
+            raise typer.Exit(1) from e
 
 
-def _resolve_syntax_input(syntax: str) -> str:
-    """
-    Resolve syntax input - either direct syntax or file path.
+def _handle_syntax_file(
+    creator: TreeCreator,
+    file_path: Path,
+    output: Path,
+    create_files: bool,
+    dry_run: bool,
+) -> None:
+    """Handle .tree/.syntax file input."""
+    try:
+        # Read syntax from file
+        syntax_content = read_syntax_file(file_path)
+        console.print(f"[blue]Info:[/blue] Reading syntax from {file_path}")
 
-    Parameters
-    ----------
-    syntax : str
-        Either declarative syntax string or path to file containing syntax
-
-    Returns
-    -------
-    str
-        The actual syntax content to parse
-
-    Raises
-    ------
-    FileNotFoundError
-        If file path is provided but file doesn't exist
-    """
-    # Check if it looks like a file path
-    # Heuristics: contains path separators, has file extension, or exists as file
-    potential_path = Path(syntax)
-
-    if (
-        # Contains path separators (/ or \)
-        ("/" in syntax or "\\" in syntax)
-        or
-        # Has file extension AND looks like single file path (no operators)
-        (
-            "." in syntax
-            and not syntax.startswith("d(")
-            and not syntax.startswith("f(")
-            and not any(op in syntax for op in [" ", ">", "|"])  # No operators
+        # Process as declarative syntax
+        _handle_declarative_syntax(
+            creator, syntax_content, output, create_files, dry_run
         )
-        or
-        # Exists as a file
-        potential_path.exists()
-    ):
-        if not potential_path.exists():
-            raise FileNotFoundError(f"Template file not found: {syntax}")
 
-        if not potential_path.is_file():
-            raise ValueError(f"Path exists but is not a file: {syntax}")
+    except (FileNotFoundError, ValueError) as e:
+        console.print(f"[red]File Error:[/red] {e}")
+        raise typer.Exit(1) from e
+
+
+def _handle_diagram_file(
+    creator: TreeCreator,
+    file_path: Path,
+    output: Path,
+    create_files: bool,
+    dry_run: bool,
+    all_trees: bool,
+) -> None:
+    """Handle diagram file input (.md, .txt, etc.)."""
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        parse_task = progress.add_task("Parsing tree diagram(s)...", total=None)
 
         try:
-            content = potential_path.read_text(encoding="utf-8").strip()
-            if not content:
-                raise ValueError(f"Template file is empty: {syntax}")
-            return content
-        except UnicodeDecodeError as e:
-            msg = f"Cannot read template file (encoding issue): {syntax}"
-            raise ValueError(msg) from e
+            parser = TreeDiagramParser()
+            trees = parser.parse_file(file_path, all_trees)
+            progress.remove_task(parse_task)
 
-    # Treat as direct syntax
-    return syntax
+            console.print(f"[green]✓[/green] Found {len(trees)} tree(s) in {file_path}")
+
+            # Create structures
+            create_task = progress.add_task(
+                "Creating directory structure(s)...", total=None
+            )
+
+            if len(trees) == 1:
+                results = creator.create_structure(
+                    trees[0], output, create_files, dry_run
+                )
+                creator.print_summary(results)
+            else:
+                results_list = creator.create_multiple_structures(
+                    trees, output, create_files, dry_run
+                )
+                _print_multiple_trees_summary(results_list, len(trees))
+
+            progress.remove_task(create_task)
+
+        except Exception as e:
+            progress.remove_task(parse_task)
+            console.print(f"[red]Diagram Parse Error:[/red] {e}")
+            console.print(
+                f"[yellow]Hint:[/yellow] Make sure {file_path} contains "
+                "valid tree diagrams"
+            )
+            raise typer.Exit(1) from e
+
+
+def _print_multiple_trees_summary(
+    results_list: list[MultipleCreationResult], tree_count: int
+) -> None:
+    """Print summary for multiple trees creation."""
+    total_dirs = sum(r["directories_created"] for r in results_list)
+    total_files = sum(r["files_created"] for r in results_list)
+    total_errors = sum(len(r["errors"]) for r in results_list)
+
+    console.print("\n[bold yellow]Overall Summary:[/bold yellow]")
+    console.print(f"Trees created: [blue]{tree_count}[/blue]")
+    console.print(f"Total directories: [blue]{total_dirs}[/blue]")
+    console.print(f"Total files: [green]{total_files}[/green]")
+    if total_errors:
+        console.print(f"[red]Total errors: {total_errors}[/red]")
 
 
 if __name__ == "__main__":

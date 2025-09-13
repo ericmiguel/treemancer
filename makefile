@@ -1,4 +1,4 @@
-.PHONY: help install dev format lint type-check test test-cov clean build
+.PHONY: help install dev format lint type-check test test-cov clean build demo check dev-setup all
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -44,11 +44,11 @@ check: format lint type-check test ## Run all checks
 
 demo: ## Run demo commands
 	@echo "Demo 1: Generate tree from syntax"
-	uv run treemancer generate-tree "demo > file1.py file2.py src > main.py utils > helper.py | tests > test_main.py"
+	uv run treemancer create "demo > file1.py file2.py src > main.py utils > helper.py | tests > test_main.py"
 	
 	@echo ""
 	@echo "Demo 2: Create structure (dry run)"
-	uv run treemancer from-syntax "demo > README.md src > app.py | tests > test_app.py" --dry-run --preview
+	uv run treemancer create "demo > README.md src > app.py | tests > test_app.py" --dry-run
 
 # Development workflow
 dev-setup: dev ## Complete development setup
