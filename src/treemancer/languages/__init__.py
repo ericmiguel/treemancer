@@ -7,10 +7,10 @@ Language parsers available:
 """
 
 # Re-export main classes for backward compatibility
-from treemancer.languages.declarative import DeclarativeLexer
-from treemancer.languages.declarative import DeclarativeParser
 from treemancer.languages.diagram import TreeDiagramParser
 from treemancer.languages.diagram import TreeLexer
+from treemancer.languages.structural import StructuralLexer
+from treemancer.languages.structural import StructuralParser
 
 
 __all__ = [
@@ -18,6 +18,6 @@ __all__ = [
     "TreeDiagramParser",
     "TreeLexer",
     # TreeMancer structural language
-    "DeclarativeParser",
-    "DeclarativeLexer",
+    "StructuralParser",
+    "StructuralLexer",
 ]

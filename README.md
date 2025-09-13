@@ -2,6 +2,8 @@
 
 TreeMancer is an enchanted CLI tool that creates real directory structures from both ASCII tree diagrams and **its own intuitive domain-specific language**.
 
+*You probably do not need it, but it was very fun to build!*
+
 ## 🎭 About
 
 TreeMancer is as a personal exploration project to dive deep into **language design concepts**. The goal was simple: create a practical tool while implementing fundamental computer science concepts like **tokenizers, lexers, and parsers** from scratch.

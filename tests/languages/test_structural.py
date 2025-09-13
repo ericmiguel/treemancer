@@ -220,7 +220,7 @@ class TestStructuralParser:
         assert isinstance(src, DirectoryNode)
 
 
-class TestDeclarativeIntegration:
+class TestStructuralIntegration:
     """Integration tests for TreeMancer structural syntax."""
 
     def setup_method(self):
@@ -299,7 +299,7 @@ class TestDeclarativeIntegration:
         assert isinstance(test1, FileNode)
 
 
-class TestDeclarativeTreeDiagram:
+class TestStructuralTreeDiagram:
     """Test tree diagram output generation from TreeMancer structural syntax."""
 
     def setup_method(self):

@@ -9,7 +9,7 @@ from rich.console import Console
 import typer
 
 from treemancer.creator import TreeCreator
-from treemancer.languages import DeclarativeParser
+from treemancer.languages import StructuralParser
 from treemancer.languages import TreeDiagramParser
 from treemancer.ui.components import UIComponents
 
@@ -169,7 +169,7 @@ def preview_structure(
 class InputType(Enum):
     """Types of input that can be detected."""
 
-    DECLARATIVE_SYNTAX = "treemancer_syntax"
+    STRUCTURAL_SYNTAX = "treemancer_syntax"
     SYNTAX_FILE = "syntax_file"  # .tree files
     DIAGRAM_FILE = "diagram_file"  # .md, .txt files
 
@@ -183,7 +183,7 @@ def detect_input_type(input_source: str) -> Tuple[InputType, Path | None]:
     2. If file exists, determine type by extension:
        - .tree, .syntax → SYNTAX_FILE
        - .md, .txt, others → DIAGRAM_FILE
-    3. If not a file, treat as DECLARATIVE_SYNTAX
+    3. If not a file, treat as STRUCTURAL_SYNTAX
 
     Parameters
     ----------
@@ -210,7 +210,7 @@ def detect_input_type(input_source: str) -> Tuple[InputType, Path | None]:
             return InputType.DIAGRAM_FILE, potential_path
 
     # Not a file, treat as direct TreeMancer syntax
-    return InputType.DECLARATIVE_SYNTAX, None
+    return InputType.STRUCTURAL_SYNTAX, None
 
 
 def read_syntax_file(file_path: Path) -> str:
@@ -264,8 +264,8 @@ def handle_auto_detected_input(
     """
     input_type, file_path = detect_input_type(input_source)
 
-    if input_type == InputType.DECLARATIVE_SYNTAX:
-        _handle_declarative_syntax(creator, input_source, output, create_files, dry_run)
+    if input_type == InputType.STRUCTURAL_SYNTAX:
+        _handle_structural_syntax(creator, input_source, output, create_files, dry_run)
     elif input_type == InputType.SYNTAX_FILE and file_path:
         _handle_syntax_file(creator, file_path, output, create_files, dry_run)
     elif input_type == InputType.DIAGRAM_FILE and file_path:
@@ -274,7 +274,7 @@ def handle_auto_detected_input(
         )
 
 
-def _handle_declarative_syntax(
+def _handle_structural_syntax(
     creator: TreeCreator,
     syntax: str,
     output: Path,
@@ -286,7 +286,7 @@ def _handle_declarative_syntax(
         parse_task = progress.add_task("Parsing TreeMancer syntax...", total=None)
 
         try:
-            parser = DeclarativeParser()
+            parser = StructuralParser()
             tree = parser.parse(syntax)
             progress.remove_task(parse_task)
 
@@ -320,7 +320,7 @@ def _handle_syntax_file(
         console.print(f"[blue]Info:[/blue] Reading syntax from {file_path}")
 
         # Process as TreeMancer syntax
-        _handle_declarative_syntax(
+        _handle_structural_syntax(
             creator, syntax_content, output, create_files, dry_run
         )
 
@@ -389,17 +389,17 @@ def handle_preview_input(input_source: str, all_trees: bool = False) -> None:
     """
     input_type, file_path = detect_input_type(input_source)
 
-    if input_type == InputType.DECLARATIVE_SYNTAX:
-        _handle_preview_declarative_syntax(input_source)
+    if input_type == InputType.STRUCTURAL_SYNTAX:
+        _handle_preview_structural_syntax(input_source)
     elif input_type == InputType.SYNTAX_FILE and file_path:
         _handle_preview_syntax_file(file_path)
     elif input_type == InputType.DIAGRAM_FILE and file_path:
         _handle_preview_diagram_file(file_path, all_trees)
 
 
-def _handle_preview_declarative_syntax(syntax: str) -> None:
+def _handle_preview_structural_syntax(syntax: str) -> None:
     """Handle preview of direct TreeMancer syntax input with detailed validation."""
-    parser = DeclarativeParser()
+    parser = StructuralParser()
 
     try:
         # First validate syntax and get detailed info
@@ -446,7 +446,7 @@ def _handle_preview_syntax_file(file_path: Path) -> None:
         console.print(f"[blue]Info:[/blue] Reading syntax from {file_path}")
 
         # Process as TreeMancer syntax preview
-        _handle_preview_declarative_syntax(syntax_content)
+        _handle_preview_structural_syntax(syntax_content)
 
     except (FileNotFoundError, ValueError) as e:
         console.print(f"[red]File Error:[/red] {e}")
