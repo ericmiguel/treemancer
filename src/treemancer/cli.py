@@ -72,8 +72,8 @@ def create(
         str, typer.Argument(
             help=(
                 "TreeMancer spell (structural syntax) or path to scroll (a .tree, "
-                ".md or even a .txt file). If file, make sure to enclose with ``` "
-                "(like you do to a code block in a markdown file)."
+                ".md or even a .txt file). If file, make sure to enclose with ```, "
+                "like how you do to a code block in a markdown file."
             )
         )
     ],
