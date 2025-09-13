@@ -116,13 +116,18 @@ def create(
 
 @app.command("preview")
 def preview_structure(
-    syntax: Annotated[str, typer.Argument(help="Declarative syntax to preview")],
+    input_source: Annotated[
+        str, typer.Argument(help="Declarative syntax or path to file")
+    ],
+    all_trees: Annotated[
+        bool, typer.Option("--all-trees", help="Preview all trees found in file")
+    ] = False,
 ) -> None:
     """
     Preview directory structure [bold]without creating it[/bold].
 
-    Shows what the structure would look like for declarative syntax.
-    For previewing files, use the [cyan]--dry-run[/cyan] flag with other commands.
+    Shows what the structure would look like for declarative syntax or files.
+    Automatically detects input type and handles accordingly.
 
     [bold yellow]Examples[/bold yellow]
 
@@ -130,24 +135,24 @@ def preview_structure(
     [green]treemancer preview[/green] [cyan]"project > src > main.py | tests"[/cyan]
     [green]treemancer preview[/green] [cyan]"webapp > src > main.py utils.py"[/cyan]
 
-    [dim]For files:[/dim]
-    [green]treemancer create[/green] [cyan]structure.md --dry-run[/cyan]
-    [green]treemancer diagram[/green] [cyan]structure.md --dry-run[/cyan]
+    [dim]From files:[/dim]
+    [green]treemancer preview[/green] [cyan]templates/fastapi.tree[/cyan]
+    [green]treemancer preview[/green] [cyan]structure.md[/cyan]
+    [green]treemancer preview[/green] [cyan]structure.md --all-trees[/cyan]
     """
     try:
-        # Only handle declarative syntax - simpler and clearer purpose
-        parser = DeclarativeParser()
-        tree = parser.parse(syntax)
-        console.print("\n[bold yellow]🔍 Structure Preview:[/bold yellow]")
-        ui.display_tree_preview(tree)
+        # Use the same auto-detection system as create command
+        handle_preview_input(input_source, all_trees)
 
-        # Show quick stats
-        stats_table = ui.create_file_statistics_table(tree)
-        console.print(stats_table)
-
-    except Exception as e:
-        console.print(f"[red]Preview Error:[/red] {e}")
-        raise typer.Exit(1) from e
+    except typer.Exit:
+        # Re-raise typer.Exit without modification (preserves exit code)
+        raise
+    except FileNotFoundError as e1:
+        console.print(f"[red]Error:[/red] File not found: {input_source}")
+        raise typer.Exit(1) from e1
+    except Exception as e2:
+        console.print(f"[red]Preview Error:[/red] {e2}")
+        raise typer.Exit(1) from e2
 
 
 @app.command()
@@ -398,6 +403,90 @@ def _handle_diagram_file(
                 "valid tree diagrams"
             )
             raise typer.Exit(1) from e
+
+
+# ============================================================================
+# Preview Handlers
+# ============================================================================
+
+
+def handle_preview_input(input_source: str, all_trees: bool = False) -> None:
+    """
+    Handle preview input with automatic type detection.
+
+    This function processes any input type and shows a preview without creation.
+    """
+    input_type, file_path = detect_input_type(input_source)
+
+    if input_type == InputType.DECLARATIVE_SYNTAX:
+        _handle_preview_declarative_syntax(input_source)
+    elif input_type == InputType.SYNTAX_FILE and file_path:
+        _handle_preview_syntax_file(file_path)
+    elif input_type == InputType.DIAGRAM_FILE and file_path:
+        _handle_preview_diagram_file(file_path, all_trees)
+
+
+def _handle_preview_declarative_syntax(syntax: str) -> None:
+    """Handle preview of direct declarative syntax input."""
+    try:
+        parser = DeclarativeParser()
+        tree = parser.parse(syntax)
+        console.print("\n[bold yellow]🔍 Structure Preview:[/bold yellow]")
+        ui.display_tree_preview(tree)
+
+        # Show quick stats
+        stats_table = ui.create_file_statistics_table(tree)
+        console.print(stats_table)
+
+    except Exception as e:
+        console.print(f"[red]Syntax Error:[/red] {e}")
+        raise typer.Exit(1) from e
+
+
+def _handle_preview_syntax_file(file_path: Path) -> None:
+    """Handle preview of .tree/.syntax file input."""
+    try:
+        # Read syntax from file
+        syntax_content = read_syntax_file(file_path)
+        console.print(f"[blue]Info:[/blue] Reading syntax from {file_path}")
+
+        # Process as declarative syntax preview
+        _handle_preview_declarative_syntax(syntax_content)
+
+    except (FileNotFoundError, ValueError) as e:
+        console.print(f"[red]File Error:[/red] {e}")
+        raise typer.Exit(1) from e
+
+
+def _handle_preview_diagram_file(file_path: Path, all_trees: bool) -> None:
+    """Handle preview of diagram file input (.md, .txt, etc.)."""
+    try:
+        parser = TreeDiagramParser()
+        trees = parser.parse_file(file_path, all_trees)
+
+        console.print(f"[green]✓[/green] Found {len(trees)} tree(s) in {file_path}")
+        console.print("\n[bold yellow]🔍 Structure Preview(s):[/bold yellow]")
+
+        # Preview each tree found
+        for i, tree in enumerate(trees, 1):
+            if len(trees) > 1:
+                console.print(f"\n[bold cyan]Tree #{i}:[/bold cyan]")
+
+            ui.display_tree_preview(tree)
+
+            # Show stats for each tree
+            stats_table = ui.create_file_statistics_table(tree)
+            console.print(stats_table)
+
+            if i < len(trees):  # Add separator between trees
+                console.print("\n" + "─" * 50)
+
+    except Exception as e:
+        console.print(f"[red]Diagram Parse Error:[/red] {e}")
+        console.print(
+            f"[yellow]Hint:[/yellow] Make sure {file_path} contains valid tree diagrams"
+        )
+        raise typer.Exit(1) from e
 
 
 if __name__ == "__main__":
