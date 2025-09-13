@@ -250,7 +250,7 @@ class TestTreeCreator:
     def test_build_rich_tree(self, sample_filesystem_tree: FileSystemTree) -> None:
         """Test Rich tree building."""
         try:
-            rich_tree = self.creator._build_rich_tree(sample_filesystem_tree.root)  # type: ignore[misc]
+            rich_tree = self.creator.ui.build_rich_tree(sample_filesystem_tree.root)  # type: ignore[misc]
             # If we get here without exception, the test passes
             assert rich_tree is not None
         except Exception as e:
