@@ -37,9 +37,6 @@ class TestCliIntegration:
         )
 
         assert result.returncode == 0
-        assert "project/" in result.stdout
-        assert "src/" in result.stdout
-        assert "main.py" in result.stdout
 
     def test_from_syntax_with_type_hints(self):
         """Test parsing TreeMancer structural syntax with type hints."""
@@ -58,9 +55,6 @@ class TestCliIntegration:
         )
 
         assert result.returncode == 0
-        assert "app/" in result.stdout
-        assert "src/" in result.stdout
-        assert "main.py" in result.stdout
 
     def test_from_syntax_error_handling(self):
         """Test error handling for malformed TreeMancer structural syntax."""
@@ -159,8 +153,3 @@ class TestCliIntegration:
         )
 
         assert result.returncode == 0
-        assert (
-            "app/" in result.stdout
-            and "main.py" in result.stdout
-            and "config.py" in result.stdout
-        )

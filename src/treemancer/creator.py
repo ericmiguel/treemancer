@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import TypedDict
 
 from rich.console import Console
+from rich.table import Table
 
 from treemancer.models import DirectoryNode
 from treemancer.models import FileNode
@@ -38,7 +39,7 @@ class TreeCreator:
         console : Console | None
             Rich console for output, creates new one if None
         """
-        self.console = console or Console()
+        self.console = Console(safe_box=True)
         self.ui = UIComponents(self.console)
 
     def create_structure(
@@ -120,22 +121,12 @@ class TreeCreator:
                     results["files_created"] += 1
                     results["structure"].append(str(node_path))
 
-                    self.console.print(
-                        f"{'[DRY RUN] ' if dry_run else ''}Created file: "
-                        f"[green]{node_path}[/green]"
-                    )
-
             elif isinstance(node, DirectoryNode):
                 if not dry_run:
                     node_path.mkdir(parents=True, exist_ok=True)
 
                 results["directories_created"] += 1
                 results["structure"].append(str(node_path))
-
-                self.console.print(
-                    f"{'[DRY RUN] ' if dry_run else ''}Created directory: "
-                    f"[bold blue]{node_path}[/bold blue]"
-                )
 
                 # Recursively create children
                 for child in node.children:
@@ -201,7 +192,7 @@ class TreeCreator:
         """
         self.ui.display_tree_preview(tree)
 
-    def create_file_statistics_table(self, tree: FileSystemTree):
+    def create_file_statistics_table(self, tree: FileSystemTree) -> Table:
         """Create file statistics table with Rich formatting.
 
         Parameters

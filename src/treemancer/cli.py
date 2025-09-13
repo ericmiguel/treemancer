@@ -6,6 +6,8 @@ from typing import Annotated
 from typing import Tuple
 
 from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
 import typer
 
 from treemancer.creator import TreeCreator
@@ -271,17 +273,34 @@ def handle_auto_detected_input(
     """
     input_type, file_path = detect_input_type(input_source)
 
+    text = Text()
+    panel = Panel(text, title="Formula", title_align="left")
+
+    if dry_run:
+        text.append("💭 Everything is just a illusion (dry run mode on)")
+        text.append("\n")
+
     if input_type == InputType.STRUCTURAL_SYNTAX:
-        _handle_structural_syntax(creator, input_source, output, create_files, dry_run)
+        text.append("📣 Chanting words of power (inline syntax mode)")
+        console.print(panel)
+        _handle_structural_syntax_inline(
+            creator, input_source, output, create_files, dry_run
+        )
     elif input_type == InputType.SYNTAX_FILE and file_path:
-        _handle_syntax_file(creator, file_path, output, create_files, dry_run)
+        text.append(f"📜Reading spell scroll from {file_path} (file syntax mode)")
+        console.print(panel)
+        _handle_structural_syntax_file(
+            creator, file_path, output, create_files, dry_run
+        )
     elif input_type == InputType.DIAGRAM_FILE and file_path:
-        _handle_diagram_file(
+        text.append(f"📜 Decrypting runes from {file_path} (tree diagram file mode)")
+        console.print(panel)
+        _handle_tree_diagram_file(
             creator, file_path, output, create_files, dry_run, all_trees
         )
 
 
-def _handle_structural_syntax(
+def _handle_structural_syntax_inline(
     creator: TreeCreator,
     syntax: str,
     output: Path,
@@ -297,8 +316,6 @@ def _handle_structural_syntax(
             tree = parser.parse(syntax)
             progress.remove_task(parse_task)
 
-            console.print("[green]✨[/green] Spell parsed and ready to cast")
-
             # Create structure
             create_task = progress.add_task(
                 "Creating directory structure...", total=None
@@ -313,7 +330,7 @@ def _handle_structural_syntax(
             raise typer.Exit(1) from e
 
 
-def _handle_syntax_file(
+def _handle_structural_syntax_file(
     creator: TreeCreator,
     file_path: Path,
     output: Path,
@@ -324,10 +341,9 @@ def _handle_syntax_file(
     try:
         # Read syntax from file
         syntax_content = read_syntax_file(file_path)
-        console.print(f"[blue]📜[/blue] Reading spell scroll from {file_path}")
 
         # Process as TreeMancer syntax
-        _handle_structural_syntax(
+        _handle_structural_syntax_inline(
             creator, syntax_content, output, create_files, dry_run
         )
 
@@ -336,7 +352,7 @@ def _handle_syntax_file(
         raise typer.Exit(1) from e
 
 
-def _handle_diagram_file(
+def _handle_tree_diagram_file(
     creator: TreeCreator,
     file_path: Path,
     output: Path,
@@ -415,9 +431,7 @@ def _handle_preview_structural_syntax(syntax: str) -> None:
         if result["valid"]:
             # If valid, parse and show preview
             tree = parser.parse(syntax)
-            node_count = result["node_count"]
-            console.print(f"[green]✨[/green] Spell is valid! ({node_count} nodes)")
-            console.print("\n[bold yellow]� Crystal Ball Preview:[/bold yellow]")
+
             ui.display_tree_preview(tree)
 
             # Show quick stats
@@ -425,12 +439,12 @@ def _handle_preview_structural_syntax(syntax: str) -> None:
             console.print(stats_table)
         else:
             # If invalid, show detailed validation report
-            console.print("[red]🚫[/red] Spell casting failed!")
+            console.print("🚫 Spell casting failed!")
             for error in result["errors"]:
                 console.print(f"[red]Error:[/red] {error}")
 
             # Show syntax help with highlighted examples
-            console.print("\n[yellow]� Spellbook Help:[/yellow]")
+            console.print("\n[yellow]📖 Spellbook Help[/yellow]")
             ui.print_syntax_help()
             raise typer.Exit(1)
 
@@ -450,7 +464,6 @@ def _handle_preview_syntax_file(file_path: Path) -> None:
     try:
         # Read syntax from file
         syntax_content = read_syntax_file(file_path)
-        console.print(f"[blue]Info:[/blue] Reading syntax from {file_path}")
 
         # Process as TreeMancer syntax preview
         _handle_preview_structural_syntax(syntax_content)
@@ -465,9 +478,6 @@ def _handle_preview_diagram_file(file_path: Path, all_trees: bool) -> None:
     try:
         parser = TreeDiagramParser()
         trees = parser.parse_file(file_path, all_trees)
-
-        console.print(f"[green]✓[/green] Found {len(trees)} tree(s) in {file_path}")
-        console.print("\n[bold yellow]🔍 Structure Preview(s):[/bold yellow]")
 
         # Preview each tree found
         for i, tree in enumerate(trees, 1):

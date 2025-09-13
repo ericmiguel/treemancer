@@ -38,6 +38,25 @@ class TestCliCommands:
         assert "Found" in result.stdout
         assert "tree(s)" in result.stdout
 
+    def test_create_command_dry_run_syntax(self, temp_dir: Path) -> None:
+        """Test create command with direct syntax input in dry run mode."""
+        syntax = "project > src > main.py | tests > test.py"
+        result = self.runner.invoke(
+            app,
+            [
+                "create",
+                syntax,
+                "--output",
+                str(temp_dir),
+                "--dry-run",
+            ],
+        )
+
+        assert result.exit_code == 0
+
+        # Check console output mentions dry run
+        assert "dry run mode" in result.stdout.lower()
+
     def test_create_all_trees(self, sample_markdown_file: Path, temp_dir: Path) -> None:
         """Test create command with all-trees option."""
         result = self.runner.invoke(
@@ -105,9 +124,7 @@ class TestCliCommands:
         )
 
         assert result.exit_code == 0
-        assert "Spell is valid!" in result.stdout
-        assert "nodes" in result.stdout
-        assert "Crystal Ball Preview:" in result.stdout
+        assert "crystal ball preview" in result.stdout.lower()
 
     def test_preview_command_invalid_syntax(self) -> None:
         """Test preview command with invalid syntax shows detailed error report."""
@@ -121,7 +138,6 @@ class TestCliCommands:
 
         assert result.exit_code == 1
         assert "Spell casting failed!" in result.stdout
-        assert "Spellbook Help:" in result.stdout
 
     def test_help_commands(self) -> None:
         """Test help output contains expected information."""

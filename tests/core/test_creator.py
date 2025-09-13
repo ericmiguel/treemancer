@@ -113,10 +113,6 @@ class TestTreeCreator:
         project_dir = temp_dir / "project"
         assert not project_dir.exists()
 
-        # Check console output mentions dry run
-        output = " ".join(self.mock_console.messages)
-        assert "DRY RUN" in output
-
     def test_create_multiple_structures(
         self, sample_filesystem_tree: FileSystemTree, temp_dir: Path
     ) -> None:

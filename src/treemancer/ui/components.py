@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from rich.box import ROUNDED
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress
@@ -62,7 +63,7 @@ class UIComponents:
                 display_name = f"{icon} [{color}]{node.name}[/{color}]"
             else:
                 icon, color = self.styler.get_directory_style(node.name)
-                display_name = f"{icon} [{color}]{node.name}/[/{color}]"
+                display_name = f"{icon} {node.name}"
             rich_tree = RichTree(display_name)
 
         # Only DirectoryNode has children
@@ -73,7 +74,7 @@ class UIComponents:
                     rich_tree.add(f"{icon} [{color}]{child.name}[/{color}]")
                 else:
                     icon, color = self.styler.get_directory_style(child.name)
-                    child_display = f"{icon} [{color}]{child.name}/[/{color}]"
+                    child_display = f"{icon} {child.name}"
                     child_tree = rich_tree.add(child_display)
                     self.build_rich_tree(child, child_tree)
 
@@ -111,7 +112,7 @@ class UIComponents:
         count_files_recursive(tree.root)
 
         # Create table
-        table = Table(title="📊 File Type Statistics")
+        table = Table(expand=True, box=ROUNDED)
         table.add_column("Type", style="cyan", no_wrap=True)
         table.add_column("Count", style="magenta", no_wrap=True)
         table.add_column("Files", style="green")
@@ -163,17 +164,17 @@ class UIComponents:
 
             return Panel(
                 full_content,
-                title="[bold yellow]⚠️ Creation Summary[/bold yellow]",
+                title="[bold yellow]Summary[/bold yellow]",
+                title_align="left",
                 border_style="yellow",
-                padding=(1, 2),
             )
         else:
             # Clean success summary
             return Panel(
                 summary_content,
-                title="[bold green]✅ Creation Summary[/bold green]",
+                title="[bold green]Summary[/bold green]",
+                title_align="left",
                 border_style="green",
-                padding=(1, 2),
             )
 
     def create_multiple_trees_summary_panel(
@@ -216,16 +217,16 @@ class UIComponents:
                     f"[bold yellow]📊 Multiple Trees Summary[/bold yellow] "
                     f"[red]({total_errors} errors)[/red]"
                 ),
+                title_align="left",
                 border_style="yellow",
-                padding=(1, 2),
             )
         else:
             # Clean success summary
             return Panel(
                 summary_content,
                 title="[bold green]📊 Multiple Trees Summary[/bold green]",
+                title_align="left",
                 border_style="green",
-                padding=(1, 2),
             )
 
     def create_syntax_help_display(self) -> tuple[Syntax, Table]:
@@ -298,8 +299,17 @@ webapp > src > main.py utils.py | tests > test_main.py | docs > README.md
             File system tree to display
         """
         rich_tree = self.build_rich_tree(tree.root)
-        self.console.print("\n")
-        self.console.print(rich_tree)
+
+        rich_tree.expanded = True
+
+        panel = Panel(
+            rich_tree,
+            title="[bold blue]Crystal ball preview[/bold blue]",
+            title_align="left",
+            border_style="blue",
+            padding=(1, 1),
+        )
+        self.console.print(panel)
 
     def print_summary(self, results: "CreationResult") -> None:
         """Print creation summary using Rich panels.
