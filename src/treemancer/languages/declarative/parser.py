@@ -1,4 +1,4 @@
-"""Parser for TreeMancer declarative syntax."""
+"""Parser for TreeMancer structural syntax."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ class ValidationResult(TypedDict):
 
 
 class DeclarativeParseError(Exception):
-    """Error during declarative parsing."""
+    """Error during TreeMancer structural syntax parsing."""
 
     def __init__(self, message: str, token: Optional[DeclarativeToken] = None):
         """Initialize parse error with message and optional token."""
@@ -38,24 +38,27 @@ class DeclarativeParseError(Exception):
 
 
 class DeclarativeParser:
-    """Parser for declarative tree syntax."""
+    """Parser for TreeMancer structural syntax."""
 
     def __init__(self):
         """Initialize the parser."""
         self.lexer = DeclarativeLexer()
 
     def parse(self, text: str) -> FileSystemTree:
-        """Parse declarative syntax into a FileSystemTree.
+        """Parse TreeMancer structural syntax into a FileSystemTree.
+
+        Processes the given text using the TreeMancer language parser
+        and returns a tree structure representing the file system.
 
         Parameters
         ----------
         text : str
-            Declarative syntax text to parse
+            TreeMancer structural syntax text to parse
 
         Returns
         -------
         FileSystemTree
-            Parsed tree structure
+            The parsed tree structure
 
         Raises
         ------

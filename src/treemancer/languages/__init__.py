@@ -1,8 +1,9 @@
-"""Language modules for TreeMancer.
+"""
+TreeMancer language support.
 
-This package contains parsers for different tree representation languages:
-- diagram: Traditional tree diagrams (existing functionality)
-- declarative: New declarative syntax with > and | operators
+Language parsers available:
+- structural: TreeMancer's domain-specific syntax with > and | operators
+- diagram: Traditional ASCII tree diagrams
 """
 
 # Re-export main classes for backward compatibility
@@ -16,7 +17,7 @@ __all__ = [
     # Diagram language (legacy)
     "TreeDiagramParser",
     "TreeLexer",
-    # Declarative language (new)
+    # TreeMancer structural language
     "DeclarativeParser",
     "DeclarativeLexer",
 ]

@@ -1,6 +1,6 @@
 # TreeMancer Templates
 
-This directory contains pre-built templates for common project structures using TreeMancer's declarative syntax.
+This directory contains pre-built templates for common project structures using TreeMancer's structural syntax.
 
 ## Available Templates
 
@@ -58,7 +58,7 @@ treemancer from-syntax templates/datascience.tree
 
 ## Creating Custom Templates
 
-Templates are simple text files containing TreeMancer declarative syntax:
+Templates are simple text files containing TreeMancer structural syntax:
 
 1. **Create a `.tree` file** with your structure:
    ```

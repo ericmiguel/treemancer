@@ -1,4 +1,4 @@
-"""Lexer for TreeMancer declarative syntax."""
+"""Lexer for TreeMancer structural syntax."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ class SyntaxAnalysis(TypedDict):
 
 
 class DeclarativeLexer:
-    """Lexer for declarative tree syntax."""
+    """Lexer for TreeMancer structural tree syntax."""
 
     # Token patterns (order matters - longer patterns first)
     TOKEN_PATTERNS = [
@@ -56,7 +56,7 @@ class DeclarativeLexer:
         ]
 
     def tokenize(self, text: str) -> DeclarativeLexerResult:
-        """Tokenize declarative syntax text into tokens.
+        """Tokenize TreeMancer structural syntax text into tokens.
 
         Parameters
         ----------

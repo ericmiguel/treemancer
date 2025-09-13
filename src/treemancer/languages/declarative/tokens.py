@@ -1,4 +1,4 @@
-"""Tokens for TreeMancer declarative syntax."""
+"""Tokens for TreeMancer structural syntax."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from enum import Enum
 
 
 class DeclarativeTokenType(Enum):
-    """Types of tokens in declarative tree syntax."""
+    """Types of tokens in TreeMancer structural syntax."""
 
     # Structure tokens
     NAME = "name"  # File or directory name
@@ -31,7 +31,7 @@ class DeclarativeTokenType(Enum):
 
 @dataclass(frozen=True)
 class DeclarativeToken:
-    """A token in declarative tree syntax."""
+    """A token in TreeMancer structural syntax."""
 
     type: DeclarativeTokenType
     value: str
@@ -50,7 +50,7 @@ class DeclarativeToken:
 
 @dataclass
 class DeclarativeLexerResult:
-    """Result of lexing declarative tree syntax."""
+    """Result of lexing TreeMancer structural syntax."""
 
     tokens: list[DeclarativeToken]
     errors: list[str]

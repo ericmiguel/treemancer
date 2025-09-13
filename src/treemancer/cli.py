@@ -69,7 +69,7 @@ def main(
 @app.command()
 def create(
     input_source: Annotated[
-        str, typer.Argument(help="Declarative syntax or path to file")
+        str, typer.Argument(help="TreeMancer syntax or path to file")
     ],
     output: Annotated[
         Path, typer.Option("--output", "-o", help="Output directory")
@@ -89,7 +89,7 @@ def create(
     Create directory structure from syntax or file.
 
     This is the [bold]main command[/bold] that automatically detects whether
-    you're providing declarative syntax or a file path with tree diagrams.
+    you're providing TreeMancer syntax or a file path with tree diagrams.
 
     [bold yellow]Examples[/bold yellow]
 
@@ -122,7 +122,7 @@ def create(
 @app.command("preview")
 def preview_structure(
     input_source: Annotated[
-        str, typer.Argument(help="Declarative syntax or path to file")
+        str, typer.Argument(help="TreeMancer syntax or path to file")
     ],
     all_trees: Annotated[
         bool, typer.Option("--all-trees", help="Preview all trees found in file")
@@ -131,7 +131,7 @@ def preview_structure(
     """
     Preview directory structure [bold]without creating it[/bold].
 
-    Shows what the structure would look like for declarative syntax or files.
+    Shows what the structure would look like for TreeMancer syntax or files.
     Automatically detects input type and handles accordingly.
     If syntax errors are found, shows detailed validation report.
 
@@ -169,7 +169,7 @@ def preview_structure(
 class InputType(Enum):
     """Types of input that can be detected."""
 
-    DECLARATIVE_SYNTAX = "declarative_syntax"
+    DECLARATIVE_SYNTAX = "treemancer_syntax"
     SYNTAX_FILE = "syntax_file"  # .tree files
     DIAGRAM_FILE = "diagram_file"  # .md, .txt files
 
@@ -209,7 +209,7 @@ def detect_input_type(input_source: str) -> Tuple[InputType, Path | None]:
             # Assume any other file is a diagram file (.md, .txt, etc.)
             return InputType.DIAGRAM_FILE, potential_path
 
-    # Not a file, treat as direct declarative syntax
+    # Not a file, treat as direct TreeMancer syntax
     return InputType.DECLARATIVE_SYNTAX, None
 
 
@@ -281,16 +281,16 @@ def _handle_declarative_syntax(
     create_files: bool,
     dry_run: bool,
 ) -> None:
-    """Handle direct declarative syntax input."""
+    """Handle direct TreeMancer syntax input."""
     with ui.create_progress_context("Processing...") as progress:
-        parse_task = progress.add_task("Parsing declarative syntax...", total=None)
+        parse_task = progress.add_task("Parsing TreeMancer syntax...", total=None)
 
         try:
             parser = DeclarativeParser()
             tree = parser.parse(syntax)
             progress.remove_task(parse_task)
 
-            console.print("[green]✓[/green] Successfully parsed declarative syntax")
+            console.print("[green]✓[/green] Successfully parsed TreeMancer syntax")
 
             # Create structure
             create_task = progress.add_task(
@@ -319,7 +319,7 @@ def _handle_syntax_file(
         syntax_content = read_syntax_file(file_path)
         console.print(f"[blue]Info:[/blue] Reading syntax from {file_path}")
 
-        # Process as declarative syntax
+        # Process as TreeMancer syntax
         _handle_declarative_syntax(
             creator, syntax_content, output, create_files, dry_run
         )
@@ -398,7 +398,7 @@ def handle_preview_input(input_source: str, all_trees: bool = False) -> None:
 
 
 def _handle_preview_declarative_syntax(syntax: str) -> None:
-    """Handle preview of direct declarative syntax input with detailed validation."""
+    """Handle preview of direct TreeMancer syntax input with detailed validation."""
     parser = DeclarativeParser()
 
     try:
@@ -445,7 +445,7 @@ def _handle_preview_syntax_file(file_path: Path) -> None:
         syntax_content = read_syntax_file(file_path)
         console.print(f"[blue]Info:[/blue] Reading syntax from {file_path}")
 
-        # Process as declarative syntax preview
+        # Process as TreeMancer syntax preview
         _handle_preview_declarative_syntax(syntax_content)
 
     except (FileNotFoundError, ValueError) as e:

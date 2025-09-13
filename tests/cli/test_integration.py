@@ -1,4 +1,4 @@
-"""Tests for CLI integration with declarative syntax."""
+"""Tests for CLI integration with TreeMancer structural syntax."""
 
 from pathlib import Path
 import subprocess
@@ -6,7 +6,7 @@ import tempfile
 
 
 class TestCliIntegration:
-    """Test CLI integration with declarative syntax."""
+    """Test CLI integration with TreeMancer structural syntax."""
 
     def test_create_help(self):
         """Test that create command shows help."""
@@ -21,7 +21,7 @@ class TestCliIntegration:
         assert "syntax or file" in result.stdout
 
     def test_from_syntax_dry_run(self):
-        """Test dry run functionality with declarative syntax."""
+        """Test dry run functionality with TreeMancer structural syntax."""
         result = subprocess.run(
             [
                 "python",
@@ -42,7 +42,7 @@ class TestCliIntegration:
         assert "main.py" in result.stdout
 
     def test_from_syntax_with_type_hints(self):
-        """Test parsing declarative syntax with type hints."""
+        """Test parsing TreeMancer structural syntax with type hints."""
         result = subprocess.run(
             [
                 "python",
@@ -63,7 +63,7 @@ class TestCliIntegration:
         assert "main.py" in result.stdout
 
     def test_from_syntax_error_handling(self):
-        """Test error handling for malformed declarative syntax."""
+        """Test error handling for malformed TreeMancer structural syntax."""
         result = subprocess.run(
             [
                 "python",
@@ -81,7 +81,7 @@ class TestCliIntegration:
         assert "error" in result.stderr.lower() or "error" in result.stdout.lower()
 
     def test_from_syntax_actual_creation(self):
-        """Test actual directory creation with declarative syntax."""
+        """Test actual directory creation with TreeMancer structural syntax."""
         with tempfile.TemporaryDirectory() as temp_dir:
             output_path = Path(temp_dir) / "test_output"
 
@@ -111,7 +111,7 @@ class TestCliIntegration:
             assert (output_path / "testproject" / "tests" / "test_app.py").exists()
 
     def test_from_syntax_no_files_option(self):
-        """Test --no-files option with declarative syntax."""
+        """Test --no-files option with TreeMancer structural syntax."""
         with tempfile.TemporaryDirectory() as temp_dir:
             output_path = Path(temp_dir) / "test_output"
 

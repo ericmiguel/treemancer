@@ -1,4 +1,4 @@
-"""Declarative syntax language for TreeMancer."""
+"""TreeMancer structural syntax language implementation."""
 
 from treemancer.languages.declarative.lexer import DeclarativeLexer
 from treemancer.languages.declarative.parser import DeclarativeParser

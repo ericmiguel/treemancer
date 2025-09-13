@@ -1,4 +1,4 @@
-"""Tests for declarative syntax language."""
+"""Tests for TreeMancer structural syntax language."""
 
 import pytest
 
@@ -11,7 +11,7 @@ from treemancer.models import FileNode
 
 
 class TestDeclarativeLexer:
-    """Test the declarative syntax lexer."""
+    """Test the TreeMancer structural syntax lexer."""
 
     def setup_method(self):
         """Set up test fixtures."""
@@ -65,7 +65,7 @@ class TestDeclarativeLexer:
         assert tokens[3].type == DeclarativeTokenType.EOF
 
     def test_complex_syntax(self):
-        """Test tokenizing complex declarative syntax."""
+        """Test tokenizing complex TreeMancer structural syntax."""
         text = "root > src > module1 | module2 > f(__init__.py)"
         result = self.lexer.tokenize(text)
         tokens = self.lexer.filter_whitespace(result.tokens)
@@ -99,7 +99,7 @@ class TestDeclarativeLexer:
 
 
 class TestDeclarativeParser:
-    """Test the declarative syntax parser."""
+    """Test the TreeMancer structural syntax parser."""
 
     def setup_method(self):
         """Set up test fixtures."""
@@ -221,7 +221,7 @@ class TestDeclarativeParser:
 
 
 class TestDeclarativeIntegration:
-    """Integration tests for declarative syntax."""
+    """Integration tests for TreeMancer structural syntax."""
 
     def setup_method(self):
         """Set up test fixtures."""
@@ -300,7 +300,7 @@ class TestDeclarativeIntegration:
 
 
 class TestDeclarativeTreeDiagram:
-    """Test tree diagram output generation from declarative syntax."""
+    """Test tree diagram output generation from TreeMancer structural syntax."""
 
     def setup_method(self):
         """Set up parser for each test."""
@@ -366,7 +366,7 @@ class TestDeclarativeTreeDiagram:
         assert diagram == expected
 
     def test_round_trip_compatibility(self):
-        """Test that declarative → diagram → declarative maintains structure."""
+        """Test syntax preservation through diagram conversion roundtrip."""
         original_syntax = (
             "project > d(src) > main.py utils.py | d(tests) > test_main.py"
         )

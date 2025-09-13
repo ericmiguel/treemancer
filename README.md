@@ -1,15 +1,21 @@
 # 🧙 TreeMancer
 
-TreeMancer is an enchanted CLI tool that creates real directory structures from both ASCII tree diagrams and declarative syntax
+TreeMancer is an enchanted CLI tool that creates real directory structures from both ASCII tree diagrams and **its own intuitive domain-specific language**.
+
+## 🎭 About
+
+TreeMancer is as a personal exploration project to dive deep into **language design concepts**. The goal was simple: create a practical tool while implementing fundamental computer science concepts like **tokenizers, lexers, and parsers** from scratch.
 
 ## 🚀 Features
 
--   🎯 **Dual Input Methods**: Tree diagrams OR declarative syntax
+-   🗣️ **Custom DSL**: TreeMancer's own intuitive domain-specific language for describing directory structures
+-   🎯 **Dual Input Methods**: Tree diagrams OR the native TreeMancer syntax
 -   📋 **Template System**: Reusable `.tree` files for common structures
 -   🛠️ **Simple Commands**: Just `create` and `preview` with auto-detection
 -   ⚡ **Fast & Reliable**: Built with modern Python and comprehensive tests
 -   🔮 **Smart Detection**: Automatic file vs directory inference
 -   ✅ **Built-in Validation**: Syntax checking with detailed error reports
+-   🧠 **Educational**: Built from scratch with tokenizers, lexers, and parsers
 
 ## 📦 Installation
 
@@ -41,7 +47,7 @@ TreeMancer features a streamlined CLI with just two main commands:
 - **`preview`** - Validates syntax and shows structure preview without creating files
 
 Both commands automatically detect input type and handle:
-- 📝 **Declarative syntax** (direct command line input)
+- 📝 **TreeMancer syntax** (direct command line input)
 - 📄 **Template files** (.tree files with syntax)
 - 📋 **Markdown files** (with tree diagrams)
 - 📚 **Multiple trees** (with --all-trees flag)
@@ -69,7 +75,7 @@ treemancer create "my_project > f(__init__.py) f(main.py) d(tests) d(docs) f(req
 treemancer create "microservice > f(Dockerfile) f(docker-compose.yml) d(app) d(tests) | app > f(main.py) f(config.py) d(models) d(routes)"
 ```
 
-## 📚 Declarative Syntax Manual
+## 📚 TreeMancer Language Manual
 
 ### 🎯 Basic Operators
 
@@ -115,7 +121,7 @@ treemancer create "f(Dockerfile) > commands"  # Dockerfile is definitely a file
 
 ### 🔄 Conversion Examples
 
-#### Tree Diagram → Declarative Syntax
+#### Tree Diagram → TreeMancer Syntax
 
 **Input (Tree Diagram):**
 ```
@@ -131,14 +137,14 @@ webapp/
     └── app.test.js
 ```
 
-**Output (Declarative Syntax):**
+**Output (TreeMancer Syntax):**
 ```bash
 webapp > package.json src > components > Header.js Footer.js | pages > Home.js | tests > app.test.js
 ```
 
-#### Declarative Syntax → Tree Diagram
+#### TreeMancer Syntax → Tree Diagram
 
-**Input (Declarative Syntax):**
+**Input (TreeMancer Syntax):**
 ```bash
 treemancer preview "project > README.md src > main.py utils.py | tests > test_main.py"
 ```
@@ -248,7 +254,7 @@ treemancer preview "invalid > > missing_name"
 ### Main Commands
 
 ```bash
-# Create from declarative syntax or file (auto-detection)
+# Create from TreeMancer syntax or file (auto-detection)
 treemancer create "project > src > main.py"
 treemancer create templates/project.tree
 treemancer create structure.md
