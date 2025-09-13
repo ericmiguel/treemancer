@@ -6,7 +6,7 @@ TreeMancer is a mystical CLI tool that conjures real directory structures from b
 
 ## 🎭 About
 
-TreeMancer began as a personal quest to master the ancient arts of **language design**. Armed with nothing but mana and curiosity, I crafted this spellbinding tool while exploring fundamental computer science concepts like **tokenizers, lexers, and parsers** from scratch. Every line of code is handwritten – no magic frameworks, just pure wizardry!
+TreeMancer is a personal quest to master the ancient arts of **language design**. Armed with nothing but mana and curiosity, I crafted this spellbinding tool while exploring fundamental computer science concepts like **tokenizers, lexers, and parsers** from scratch. Every line of code is handwritten – no magic frameworks, just pure wizardry!
 
 ## 🚀 Magical Features
 
