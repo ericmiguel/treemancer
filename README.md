@@ -1,4 +1,4 @@
-# 🧙‍♂️ TreeMancer
+# 🧙 TreeMancer
 
 TreeMancer is an enchanted CLI tool that creates real directory structures from both ASCII tree diagrams and declarative syntax
 

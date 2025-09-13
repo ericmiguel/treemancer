@@ -18,8 +18,23 @@ from treemancer.models import FileSystemNode
 
 app = typer.Typer(
     name="treemancer",
-    help="🧙‍♂️ TreeMancer - Create directory structures from text",
+    help="""
+    🧙 [bold blue]TreeMancer[/bold blue] - directory structures from text
+
+    [bold yellow]QUICK EXAMPLES[/bold yellow]
+    [green]treemancer create[/green] [cyan]"project > src > main.py | tests"[/cyan]
+    [green]treemancer create[/green] [cyan]structure.md --all-trees[/cyan]
+    [green]treemancer preview[/green] [cyan]"app > config.yml | src > main.py"[/cyan]
+
+    [bold yellow]SYNTAX GUIDE[/bold yellow]
+    [magenta]>[/magenta]        Go deeper (parent > child)
+    [magenta]|[/magenta]        Go back up one level
+    [magenta]space[/magenta]    Create siblings (file1.py file2.py)
+    [magenta]d(name)[/magenta]  Force directory
+    [magenta]f(name)[/magenta]  Force file
+    """,
     add_completion=False,
+    rich_markup_mode="rich",
 )
 
 console = Console()
@@ -30,7 +45,7 @@ def version_callback(value: bool) -> None:
     if value:
         from treemancer import __version__
 
-        console.print(f"Tree Creator version {__version__}")
+        console.print(f"🧙 [blue]Treemancer[/blue] version {__version__}")
         raise typer.Exit()
 
 
@@ -43,20 +58,7 @@ def main(
         ),
     ] = False,
 ) -> None:
-    """🧙‍♂️ TreeMancer - Create directory structures from text.
-
-    QUICK EXAMPLES:
-      treemancer create "project > src > main.py | tests"
-      treemancer create structure.md --all-trees
-      treemancer preview "app > config.yml | src > main.py"
-
-    SYNTAX GUIDE:
-      >        Go deeper (parent > child)
-      |        Go back up one level
-      space    Create siblings (file1.py file2.py)
-      d(name)  Force directory
-      f(name)  Force file
-    """
+    """TreeMancer - Create directory structures from text."""
     pass
 
 
@@ -79,19 +81,19 @@ def create(
         bool, typer.Option("--all-trees", help="Create all trees found in file")
     ] = False,
 ) -> None:
-    """Create directory structure from syntax or file.
+    """
+    Create directory structure from syntax or file.
 
-    This is the main command that automatically detects whether you're providing
-    declarative syntax or a file path with tree diagrams.
+    This is the [bold]main command[/bold] that automatically detects whether
+    you're providing declarative syntax or a file path with tree diagrams.
 
-    Examples
-    --------
-      # Direct syntax:
-      treemancer create "project > src > main.py | tests > test.py"
+    [bold yellow]Examples:[/bold yellow]
+    [dim]Direct syntax:[/dim]
+    [green]treemancer create[/green] [cyan]"project > src > main.py | tests"[/cyan]
 
-      # From file:
-      treemancer create structure.md
-      treemancer create templates/fastapi.tree
+    [dim]From file:[/dim]
+    [green]treemancer create[/green] [cyan]structure.md[/cyan]
+    [green]treemancer create[/green] [cyan]templates/fastapi.tree[/cyan]
     """
     creator = TreeCreator(console)
 
@@ -135,15 +137,15 @@ def preview_structure(
         bool, typer.Option("--all-trees", help="Preview all trees found in file")
     ] = False,
 ) -> None:
-    """Preview directory structure without creating it.
+    """
+    Preview directory structure [bold]without creating it[/bold].
 
     Shows what the structure would look like before actually creating files
     and directories.
 
-    Examples
-    --------
-      treemancer preview "project > src > main.py | tests"
-      treemancer preview structure.md --all-trees
+    [bold yellow]Examples[/bold yellow]
+    [green]treemancer preview[/green] [cyan]"project > src > main.py | tests"[/cyan]
+    [green]treemancer preview[/green] [cyan]structure.md --all-trees[/cyan]
     """
     creator = TreeCreator(console)
 
@@ -184,14 +186,14 @@ def preview_structure(
 def check(
     syntax: Annotated[str, typer.Argument(help="Declarative syntax to validate")],
 ) -> None:
-    """Validate declarative syntax without creating structure.
+    """
+    Validate declarative syntax [bold]without creating structure[/bold].
 
     Checks if the syntax is valid and shows helpful error messages if not.
 
-    Examples
-    --------
-      treemancer check "project > src > main.py | tests"
-      treemancer check "invalid > syntax > here"
+    [bold yellow]Examples[/bold yellow]
+    [green]treemancer check[/green] [cyan]"project > src > main.py | tests"[/cyan]
+    [green]treemancer check[/green] [cyan]"invalid > syntax > here"[/cyan]
     """
     try:
         parser = DeclarativeParser()
@@ -234,16 +236,16 @@ def diagram(
         typer.Option("--dry-run", help="Show what would be created without creating"),
     ] = False,
 ) -> None:
-    """Create directory structure from tree diagrams in markdown/txt files.
+    """
+    Create directory structure from [bold]tree diagrams[/bold] in files.
 
-    Reads tree diagrams from files and creates the corresponding directory
-    structure. Supports various tree diagram formats including ASCII trees
-    and markdown-style trees.
+    Reads tree diagrams from markdown/txt files and creates the corresponding
+    directory structure. Supports various tree diagram formats including
+    ASCII trees and markdown-style trees.
 
-    Examples
-    --------
-      treemancer diagram project-structure.md
-      treemancer diagram README.md --all-trees
+    [bold yellow]Examples[/bold yellow]
+    [green]treemancer diagram[/green] [cyan]project-structure.md[/cyan]
+    [green]treemancer diagram[/green] [cyan]README.md --all-trees[/cyan]
     """
     creator = TreeCreator(console)
     _handle_file_input(creator, file_path, output, all_trees, not no_files, dry_run)
@@ -344,7 +346,8 @@ def _count_nodes(node: FileSystemNode) -> int:
 
 
 def _resolve_syntax_input(syntax: str) -> str:
-    """Resolve syntax input - either direct syntax or file path.
+    """
+    Resolve syntax input - either direct syntax or file path.
 
     Parameters
     ----------

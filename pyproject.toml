@@ -1,7 +1,7 @@
 [project]
 name = "treemancer"
 version = "0.1.0"
-description = "🧙‍♂️ A magical CLI tool to create directory structures from tree diagrams"
+description = "🧙 A magical CLI tool to create directory structures from tree diagrams"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

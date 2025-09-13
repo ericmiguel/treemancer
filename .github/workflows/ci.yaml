@@ -98,10 +98,10 @@ jobs:
       run: uv tool install dist/*.whl
     
     - name: Test CLI installation
-      run: tree-creator --version
+      run: treemancer --version
     
     - name: Test basic functionality
       run: |
-        tree-creator generate-tree "test > file1.py file2.py dir1 > file3.py"
-        tree-creator from-syntax "test > main.py utils.py" --dry-run --output ./test-output
-        tree-creator from-file examples/project_structures.md --dry-run --output ./test-output
+        treemancer generate-tree "test > file1.py file2.py dir1 > file3.py"
+        treemancer from-syntax "test > main.py utils.py" --dry-run --output ./test-output
+        treemancer from-file examples/project_structures.md --dry-run --output ./test-output
