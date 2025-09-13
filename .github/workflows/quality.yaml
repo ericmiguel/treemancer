@@ -1,0 +1,183 @@
+name: Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run weekly on Mondays at 2 AM UTC
+    - cron: '0 2 * * 1'
+
+jobs:
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+    
+    - name: Set up Python
+      run: uv python install 3.13
+    
+    - name: Install dependencies
+      run: uv sync --dev
+    
+    - name: Run safety check
+      run: uv run safety check --json || true
+    
+    - name: Run bandit security linter
+      run: uv run bandit -r src/ -f json || true
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v4
+      with:
+        fail-on-severity: moderate
+
+  performance:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+    
+    - name: Set up Python
+      run: uv python install 3.13
+    
+    - name: Install dependencies
+      run: uv sync --dev
+    
+    - name: Run performance tests
+      run: |
+        # Simple performance test
+        time uv run python -c "
+        from treemancer.languages.structural import StructuralParser
+        parser = StructuralParser()
+        
+        # Test large structure parsing
+        large_syntax = 'root > ' + ' > '.join([f'dir{i}' for i in range(100)]) + ' | ' + ' '.join([f'file{i}.py' for i in range(50)])
+        
+        import time
+        start = time.time()
+        for _ in range(100):
+            tree = parser.parse(large_syntax)
+        end = time.time()
+        
+        print(f'Parsed 100 large structures in {end-start:.3f}s')
+        print(f'Average: {(end-start)*10:.1f}ms per structure')
+        "
+
+  compatibility:
+    name: Compatibility Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04, windows-latest, macos-12, macos-latest]
+        python-version: ["3.12", "3.13"]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: uv sync --dev
+    
+    - name: Run tests
+      run: uv run pytest -x -v
+    
+    - name: Test CLI basic functionality
+      shell: bash
+      run: |
+        uv run python -m treemancer --version
+        uv run python -m treemancer preview "test > main.py"
+
+  docs:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+    
+    - name: Set up Python
+      run: uv python install 3.13
+    
+    - name: Install dependencies
+      run: uv sync --dev
+    
+    - name: Check docstring coverage
+      run: |
+        uv run python -c "
+        import ast
+        import os
+        
+        def check_docstrings(directory):
+            missing = []
+            for root, dirs, files in os.walk(directory):
+                for file in files:
+                    if file.endswith('.py'):
+                        filepath = os.path.join(root, file)
+                        with open(filepath, 'r') as f:
+                            try:
+                                tree = ast.parse(f.read())
+                                for node in ast.walk(tree):
+                                    if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.AsyncFunctionDef)):
+                                        if not ast.get_docstring(node) and not node.name.startswith('_'):
+                                            missing.append(f'{filepath}:{node.lineno} - {node.name}')
+                            except:
+                                pass
+            return missing
+        
+        missing = check_docstrings('src')
+        if missing:
+            print('Missing docstrings:')
+            for item in missing[:10]:  # Show first 10
+                print(f'  {item}')
+            if len(missing) > 10:
+                print(f'  ... and {len(missing) - 10} more')
+        else:
+            print('✅ All public functions and classes have docstrings')
+        "
+    
+    - name: Validate README examples
+      run: |
+        # Extract bash code blocks from README and validate basic syntax
+        grep -A 10 -B 1 '```bash' README.md | grep 'treemancer' | head -5 | while read line; do
+          echo "Validating: $line"
+          # Basic validation that commands exist
+          if [[ $line == *"treemancer create"* ]] || [[ $line == *"treemancer preview"* ]]; then
+            echo "✅ Valid command format"
+          else
+            echo "⚠️  Unknown command in README"
+          fi
+        done

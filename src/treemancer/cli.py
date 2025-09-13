@@ -69,13 +69,14 @@ def main(
 @app.command()
 def create(
     input_source: Annotated[
-        str, typer.Argument(
+        str,
+        typer.Argument(
             help=(
                 "TreeMancer spell (structural syntax) or path to scroll (a .tree, "
                 ".md or even a .txt file). If file, make sure to enclose with ```, "
                 "like how you do to a code block in a markdown file."
             )
-        )
+        ),
     ],
     output: Annotated[
         Path, typer.Option("--output", "-o", help="Output directory")
