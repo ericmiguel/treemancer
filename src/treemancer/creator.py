@@ -1,4 +1,4 @@
-"""Directory and file creator from tree structures."""
+"""The magical forge where directory trees come to life."""
 
 from pathlib import Path
 from typing import TypedDict

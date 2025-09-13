@@ -1,4 +1,4 @@
-"""Parser for TreeMancer structural syntax."""
+"""The enchanted parser that weaves tokens into directory tree spells."""
 
 from __future__ import annotations
 

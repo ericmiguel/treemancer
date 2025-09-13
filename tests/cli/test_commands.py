@@ -19,7 +19,7 @@ class TestCliCommands:
         result = self.runner.invoke(app, ["--version"])
 
         assert result.exit_code == 0
-        assert "Treemancer version" in result.stdout
+        assert "TreeMancer v" in result.stdout
 
     def test_create_command(self, sample_markdown_file: Path, temp_dir: Path) -> None:
         """Test create command with markdown file."""
@@ -105,9 +105,9 @@ class TestCliCommands:
         )
 
         assert result.exit_code == 0
-        assert "Syntax is valid!" in result.stdout
+        assert "Spell is valid!" in result.stdout
         assert "nodes" in result.stdout
-        assert "Structure Preview:" in result.stdout
+        assert "Crystal Ball Preview:" in result.stdout
 
     def test_preview_command_invalid_syntax(self) -> None:
         """Test preview command with invalid syntax shows detailed error report."""
@@ -120,15 +120,15 @@ class TestCliCommands:
         )
 
         assert result.exit_code == 1
-        assert "Syntax is invalid!" in result.stdout
-        assert "Syntax Help:" in result.stdout
+        assert "Spell casting failed!" in result.stdout
+        assert "Spellbook Help:" in result.stdout
 
     def test_help_commands(self) -> None:
         """Test help output contains expected information."""
         result = self.runner.invoke(app, ["--help"])
 
         assert result.exit_code == 0
-        assert "TreeMancer - directory structures from text" in result.stdout
+        assert "TreeMancer - conjure directory structures with magic" in result.stdout
 
         # create help
         result = self.runner.invoke(app, ["create", "--help"])

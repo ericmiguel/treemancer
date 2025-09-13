@@ -1,4 +1,4 @@
-"""Lexer for TreeMancer structural syntax."""
+"""The mystical lexer that breaks TreeMancer incantations into magical tokens."""
 
 from __future__ import annotations
 

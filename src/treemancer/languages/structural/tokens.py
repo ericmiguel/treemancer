@@ -1,4 +1,4 @@
-"""Tokens for TreeMancer structural syntax."""
+"""Mystical tokens that form the building blocks of TreeMancer spells."""
 
 from __future__ import annotations
 

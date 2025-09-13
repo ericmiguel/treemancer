@@ -1,4 +1,4 @@
-"""CLI interface for Treemancer."""
+"""Command-line spellbook for the TreeMancer wizard."""
 
 from enum import Enum
 from pathlib import Path
@@ -17,12 +17,12 @@ from treemancer.ui.components import UIComponents
 app = typer.Typer(
     name="treemancer",
     help="""
-    🧙 [bold blue]TreeMancer[/bold blue] - directory structures from text
+    🧙‍♂️ [bold blue]TreeMancer[/bold blue] - conjure directory structures with magic
 
-    [green]create[/green]  Create directory structure from syntax or file.
-    [green]preview[/green] Validate and preview structure without creating it.
+    [green]create[/green]  Cast spells to manifest structures from syntax or scrolls.
+    [green]preview[/green] Consult the crystal ball to validate spells before casting.
 
-    [bold yellow]QUICK EXAMPLES[/bold yellow]
+    [bold yellow]MAGICAL EXAMPLES[/bold yellow]
     [green]treemancer create[/green] [cyan]"project > src > main.py | tests"[/cyan]
     [green]treemancer create[/green] [cyan]structure.md --all-trees[/cyan]
     [green]treemancer preview[/green] [cyan]"app > config.yml | src > main.py"[/cyan]
@@ -49,7 +49,7 @@ def version_callback(value: bool) -> None:
     if value:
         from treemancer import __version__
 
-        console.print(f"🧙 [blue]Treemancer[/blue] version {__version__}")
+        console.print(f"🧙‍♂️ [blue]TreeMancer[/blue] v{__version__} - Directory Wizard")
         raise typer.Exit()
 
 
@@ -69,7 +69,13 @@ def main(
 @app.command()
 def create(
     input_source: Annotated[
-        str, typer.Argument(help="TreeMancer syntax or path to file")
+        str, typer.Argument(
+            help=(
+                "TreeMancer spell (structural syntax) or path to scroll (a .tree, "
+                ".md or even a .txt file). If file, make sure to enclose with ``` "
+                "(like you do to a code block in a markdown file)."
+            )
+        )
     ],
     output: Annotated[
         Path, typer.Option("--output", "-o", help="Output directory")
@@ -122,7 +128,7 @@ def create(
 @app.command("preview")
 def preview_structure(
     input_source: Annotated[
-        str, typer.Argument(help="TreeMancer syntax or path to file")
+        str, typer.Argument(help="TreeMancer spell or path to scroll")
     ],
     all_trees: Annotated[
         bool, typer.Option("--all-trees", help="Preview all trees found in file")
@@ -290,7 +296,7 @@ def _handle_structural_syntax(
             tree = parser.parse(syntax)
             progress.remove_task(parse_task)
 
-            console.print("[green]✓[/green] Successfully parsed TreeMancer syntax")
+            console.print("[green]✨[/green] Spell parsed and ready to cast")
 
             # Create structure
             create_task = progress.add_task(
@@ -317,7 +323,7 @@ def _handle_syntax_file(
     try:
         # Read syntax from file
         syntax_content = read_syntax_file(file_path)
-        console.print(f"[blue]Info:[/blue] Reading syntax from {file_path}")
+        console.print(f"[blue]📜[/blue] Reading spell scroll from {file_path}")
 
         # Process as TreeMancer syntax
         _handle_structural_syntax(
@@ -409,8 +415,8 @@ def _handle_preview_structural_syntax(syntax: str) -> None:
             # If valid, parse and show preview
             tree = parser.parse(syntax)
             node_count = result["node_count"]
-            console.print(f"[green]✓[/green] Syntax is valid! ({node_count} nodes)")
-            console.print("\n[bold yellow]🔍 Structure Preview:[/bold yellow]")
+            console.print(f"[green]✨[/green] Spell is valid! ({node_count} nodes)")
+            console.print("\n[bold yellow]� Crystal Ball Preview:[/bold yellow]")
             ui.display_tree_preview(tree)
 
             # Show quick stats
@@ -418,12 +424,12 @@ def _handle_preview_structural_syntax(syntax: str) -> None:
             console.print(stats_table)
         else:
             # If invalid, show detailed validation report
-            console.print("[red]✗[/red] Syntax is invalid!")
+            console.print("[red]🚫[/red] Spell casting failed!")
             for error in result["errors"]:
                 console.print(f"[red]Error:[/red] {error}")
 
             # Show syntax help with highlighted examples
-            console.print("\n[yellow]💡 Syntax Help:[/yellow]")
+            console.print("\n[yellow]� Spellbook Help:[/yellow]")
             ui.print_syntax_help()
             raise typer.Exit(1)
 

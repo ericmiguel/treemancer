@@ -1,4 +1,4 @@
-"""Rich UI components for TreeMancer interface."""
+"""Enchanted UI components that bring TreeMancer spells to life."""
 
 from pathlib import Path
 from typing import TYPE_CHECKING

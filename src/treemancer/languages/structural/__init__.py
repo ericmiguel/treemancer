@@ -1,4 +1,4 @@
-"""TreeMancer structural syntax language implementation."""
+"""The arcane language of TreeMancer - where symbols become structure."""
 
 from treemancer.languages.structural.lexer import StructuralLexer
 from treemancer.languages.structural.parser import StructuralParser

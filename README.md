@@ -1,23 +1,23 @@
-# 🧙 TreeMancer
+# 🧙‍♂️ TreeMancer
 
-TreeMancer is an enchanted CLI tool that creates real directory structures from both ASCII tree diagrams and **its own intuitive domain-specific language**.
+TreeMancer is a mystical CLI tool that conjures real directory structures from both ASCII tree diagrams and **its own enchanted domain-specific language**. Like a true wizard of the filesystem, it transforms your project ideas into reality with just a few magical incantations.
 
 *You probably do not need it, but it was very fun to build!*
 
 ## 🎭 About
 
-TreeMancer is as a personal exploration project to dive deep into **language design concepts**. The goal was simple: create a practical tool while implementing fundamental computer science concepts like **tokenizers, lexers, and parsers** from scratch.
+TreeMancer began as a personal quest to master the ancient arts of **language design**. Armed with nothing but mana and curiosity, I crafted this spellbinding tool while exploring fundamental computer science concepts like **tokenizers, lexers, and parsers** from scratch. Every line of code is handwritten – no magic frameworks, just pure wizardry!
 
-## 🚀 Features
+## 🚀 Magical Features
 
--   🗣️ **Custom DSL**: TreeMancer's own intuitive domain-specific language for describing directory structures
--   🎯 **Dual Input Methods**: Tree diagrams OR the native TreeMancer syntax
--   📋 **Template System**: Reusable `.tree` files for common structures
--   🛠️ **Simple Commands**: Just `create` and `preview` with auto-detection
--   ⚡ **Fast & Reliable**: Built with modern Python and comprehensive tests
--   🔮 **Smart Detection**: Automatic file vs directory inference
--   ✅ **Built-in Validation**: Syntax checking with detailed error reports
--   🧠 **Educational**: Built from scratch with tokenizers, lexers, and parsers
+-   🗣️ **Enchanted DSL**: TreeMancer's own mystical domain-specific language for conjuring directory structures
+-   🎯 **Dual Sorcery**: Cast spells with tree diagrams OR the native TreeMancer syntax
+-   📋 **Grimoire System**: Reusable `.tree` spell scrolls for common incantations
+-   🛠️ **Simple Commands**: Just `create` and `preview` with automatic spell detection
+-   ⚡ **Lightning Fast**: Built with modern Python and battle-tested spells
+-   🔮 **Crystal Ball**: Automatic file vs directory divination
+-   ✅ **Spell Checker**: Syntax validation with detailed mystical error reports
+-   🧠 **Apprentice-Friendly**: Hand-crafted from scratch with tokenizers, lexers, and parsers
 
 ## 📦 Installation
 
@@ -28,16 +28,16 @@ uv add treemancer  # or pip install treemancer
 ## 🎯 Quick Start
 
 ```bash
-# Create a simple project structure
+# Cast a simple project structure spell
 treemancer create "myapp > README.md main.py src > utils.py"
 
-# Preview with automatic validation
+# Consult the crystal ball before creating
 treemancer preview "myapp > src > main.py | tests > test.py"
 
-# Use a template file
+# Use a pre-written spell scroll
 treemancer create templates/webapp.tree --output ./my-webapp
 
-# Create from tree diagrams in files
+# Transmute tree diagrams from ancient texts
 treemancer create project-structure.md --all-trees
 ```
 
@@ -77,11 +77,11 @@ treemancer create "my_project > f(__init__.py) f(main.py) d(tests) d(docs) f(req
 treemancer create "microservice > f(Dockerfile) f(docker-compose.yml) d(app) d(tests) | app > f(main.py) f(config.py) d(models) d(routes)"
 ```
 
-## 📚 TreeMancer Language Manual
+## 📚 The TreeMancer Grimoire
 
-### 🎯 Basic Operators
+### 🎯 Fundamental Incantations
 
-TreeMancer uses a simple and powerful syntax with just a few operators:
+TreeMancer's mystical syntax uses just a few powerful operators to weave directory spells:
 
 #### **`>`** - Go Deeper (Parent → Child)
 Creates a parent-child relationship. The next item becomes a child of the current item.
@@ -298,7 +298,7 @@ treemancer create webapp.tree
 treemancer preview webapp.tree
 ```
 
-## 🧪 Development
+## 🧪 Apprentice Development
 
 ```bash
 # Setup development environment
@@ -315,9 +315,9 @@ uv run pytest        # Run tests
 uv run treemancer --help
 ```
 
-## 🤝 Contributing
+## 🤝 Join the Magic Circle
 
-TreeMancer welcomes contributions! Built with modern Python practices:
+TreeMancer welcomes fellow wizards and apprentices! Enchanted with modern Python practices:
 
 -   🏗️ **Clean Architecture**: Modular design with clear separation
 -   🧪 **Comprehensive Tests**: Full test coverage with pytest
