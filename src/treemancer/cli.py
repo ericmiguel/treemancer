@@ -19,10 +19,15 @@ app = typer.Typer(
     help="""
     🧙 [bold blue]TreeMancer[/bold blue] - directory structures from text
 
+    [green]create[/green]  Create directory structure from syntax or file.
+    [green]preview[/green] Validate and preview structure without creating it.
+
     [bold yellow]QUICK EXAMPLES[/bold yellow]
     [green]treemancer create[/green] [cyan]"project > src > main.py | tests"[/cyan]
     [green]treemancer create[/green] [cyan]structure.md --all-trees[/cyan]
     [green]treemancer preview[/green] [cyan]"app > config.yml | src > main.py"[/cyan]
+    [green]treemancer preview[/green] [cyan]templates/fastapi.tree[/cyan]
+    [green]treemancer preview[/green] [cyan]templates/giant_python_project.md[/cyan]
 
     [bold yellow]SYNTAX GUIDE[/bold yellow]
     [magenta]>[/magenta]        Go deeper (parent > child)
@@ -115,8 +120,6 @@ def create(
 
 
 @app.command("preview")
-@app.command("check")
-@app.command("parse")
 def preview_structure(
     input_source: Annotated[
         str, typer.Argument(help="Declarative syntax or path to file")
