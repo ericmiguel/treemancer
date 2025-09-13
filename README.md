@@ -6,18 +6,15 @@ TreeMancer is an enchanted CLI tool that creates real directory structures from 
 
 -   🎯 **Dual Input Methods**: Tree diagrams OR declarative syntax
 -   📋 **Template System**: Reusable `.tree` files for common structures
--   � **Smart Commands**: Intuitive `create`, `preview`, `check`, and `diagram` commands
+-   🛠️ **Simple Commands**: Just `create` and `preview` with auto-detection
 -   ⚡ **Fast & Reliable**: Built with modern Python and comprehensive tests
 -   🔮 **Smart Detection**: Automatic file vs directory inference
+-   ✅ **Built-in Validation**: Syntax checking with detailed error reports
 
 ## 📦 Installation
 
 ```bash
-# Install with pip (recommended)
-pip install treemancer
-
-# Or install with uv
-uv add treemancer
+uv add treemancer  # or pip install treemancer
 ```
 
 ## 🎯 Quick Start
@@ -26,26 +23,30 @@ uv add treemancer
 # Create a simple project structure
 treemancer create "myapp > README.md main.py src > utils.py"
 
-# Preview before creating
+# Preview with automatic validation
 treemancer preview "myapp > src > main.py | tests > test.py"
 
 # Use a template file
 treemancer create templates/webapp.tree --output ./my-webapp
 
 # Create from tree diagrams in files
-treemancer diagram project-structure.md
+treemancer create project-structure.md --all-trees
 ```
 
-## � New Intuitive Commands
+## 🎯 Simple & Powerful Commands
 
-TreeMancer now features a cleaner, more intuitive CLI:
+TreeMancer features a streamlined CLI with just two main commands:
 
-- **`create`** - Main command that auto-detects syntax vs files
-- **`preview`** - See structure before creating (replaces `--preview`)  
-- **`check`** - Validate syntax without creating anything
-- **`diagram`** - Create from tree diagrams in markdown/text files
+- **`create`** - Main command that auto-detects syntax vs files and creates structures
+- **`preview`** - Validates syntax and shows structure preview without creating files
 
-## �🎪 Real-World Examples
+Both commands automatically detect input type and handle:
+- 📝 **Declarative syntax** (direct command line input)
+- 📄 **Template files** (.tree files with syntax)
+- 📋 **Markdown files** (with tree diagrams)
+- 📚 **Multiple trees** (with --all-trees flag)
+
+## 🎪 Real-World Examples
 
 ### Web Application
 
@@ -219,7 +220,28 @@ microservices/
 3. **Reset Wisely**: Use `|` to go back one level when you need to create siblings of parent directories
 4. **Type Hints**: Use `d()` and `f()` when file extensions aren't clear (like `Dockerfile`, `Makefile`)
 5. **Templates**: Save complex structures as `.tree` files for reuse
-6. **Preview First**: Use `--preview` to see the structure before creating files
+6. **Preview First**: Always use `preview` to validate syntax and see structure before creating
+7. **Auto-Validation**: `preview` automatically validates syntax and shows helpful errors
+
+## ✅ Built-in Validation & Error Reporting
+
+TreeMancer's `preview` command now includes comprehensive syntax validation:
+
+```bash
+# Valid syntax - shows node count + preview
+treemancer preview "project > src > main.py | tests > test.py"
+# Output: ✓ Syntax is valid! (4 nodes) + structure preview
+
+# Invalid syntax - shows detailed errors + help
+treemancer preview "invalid > > missing_name"  
+# Output: ✗ Syntax is invalid! + error details + syntax guide
+```
+
+**Error Features:**
+- 🔍 **Detailed Error Messages**: Specific information about what went wrong
+- 📚 **Syntax Help**: Automatic display of syntax guide with examples
+- 🎯 **Quick Reference**: Table of operators and their usage
+- 🚀 **Works with All Inputs**: Syntax validation for direct syntax, .tree files, and .md files
 
 ## 🛠️ Command Reference
 
@@ -231,15 +253,11 @@ treemancer create "project > src > main.py"
 treemancer create templates/project.tree
 treemancer create structure.md
 
-# Preview structure without creating it
-treemancer preview "project > src > main.py"
+# Preview & validate structure without creating it
+treemancer preview "project > src > main.py"      # Shows preview if valid
+treemancer preview "invalid > > syntax"           # Shows errors + help if invalid
 treemancer preview templates/project.tree
-
-# Validate syntax only
-treemancer check "project > src > main.py"
-
-# Create from tree diagrams in markdown/text files
-treemancer diagram project-structure.md
+treemancer preview structure.md --all-trees
 ```
 
 ### Useful Options
@@ -255,8 +273,8 @@ treemancer create "..." --no-files
 treemancer create "..." --output /path/to/output
 
 # Parse all trees from file
-treemancer diagram document.md --all-trees
 treemancer create document.md --all-trees
+treemancer preview document.md --all-trees
 ```
 
 ### Template Workflow
@@ -268,7 +286,7 @@ echo "webapp > src > App.js | public > index.html" > webapp.tree
 # Use the template
 treemancer create webapp.tree
 
-# Preview template
+# Preview template (with automatic validation)
 treemancer preview webapp.tree
 ```
 
