@@ -229,13 +229,36 @@ class UIComponents:
                 border_style="green",
             )
 
-    def create_syntax_help_display(self) -> tuple[Syntax, Table]:
-        """Create syntax help with examples and reference table.
+    def create_syntax_reference_panel(self) -> Panel:
+        """Create syntax reference table."""
+        help_table = Table(expand=True, box=ROUNDED, show_edge=False, style="blue")
+        help_table.add_column("Operator", style="cyan", no_wrap=True)
+        help_table.add_column("Description", style="white")
+        help_table.add_column("Example", style="green")
+
+        help_table.add_row(">", "Go deeper", "parent > child")
+        help_table.add_row("|", "Go back up", "deep > file | sibling")
+        help_table.add_row("space", "Create sibling", "file1.py file2.py")
+        help_table.add_row("d()", "Hint directory", "d(assets)")
+        help_table.add_row("f()", "Hint file", "f(README)")
+
+        help_table_panel = Panel(
+            help_table,
+            title="[bold blue]Read the tome[/bold blue]",
+            title_align="left",
+            border_style="blue",
+            padding=(1, 2),
+        )
+
+        return help_table_panel
+
+    def create_syntax_examples_display(self) -> Panel:
+        """Create syntax help with examples.
 
         Returns
         -------
-        tuple[Syntax, Table]
-            Syntax highlighted examples and reference table
+        Panel
+            Syntax highlighted examples.
         """
         # Examples with syntax highlighting
         examples = """
@@ -257,19 +280,15 @@ webapp > src > main.py utils.py | tests > test_main.py | docs > README.md
 
         syntax_display = Syntax(examples, "bash", theme="monokai", line_numbers=True)
 
-        # Quick reference table
-        help_table = Table(title="🔧 Quick Reference")
-        help_table.add_column("Operator", style="cyan", no_wrap=True)
-        help_table.add_column("Description", style="white")
-        help_table.add_column("Example", style="green")
+        syntax_display_panel = Panel(
+            syntax_display,
+            title="[bold blue]Enchant examples[/bold blue]",
+            title_align="left",
+            border_style="blue",
+            padding=(1, 2),
+        )
 
-        help_table.add_row(">", "Go deeper", "parent > child")
-        help_table.add_row("|", "Go back up", "deep > file | sibling")
-        help_table.add_row("space", "Create siblings", "file1.py file2.py")
-        help_table.add_row("d()", "Force directory", "d(assets)")
-        help_table.add_row("f()", "Force file", "f(README)")
-
-        return syntax_display, help_table
+        return syntax_display_panel
 
     def create_progress_context(self, description: str) -> Progress:
         """Create progress context with spinner and text.
@@ -339,9 +358,10 @@ webapp > src > main.py utils.py | tests > test_main.py | docs > README.md
 
     def print_syntax_help(self) -> None:
         """Print comprehensive syntax help with examples."""
-        self.console.print("\n[bold yellow]📚 Syntax Guide[/bold yellow]")
+        syntax_examples = self.create_syntax_examples_display()
+        syntax_reference = self.create_syntax_reference_panel()
 
-        syntax_display, help_table = self.create_syntax_help_display()
+        self.console.print(syntax_examples)
+        self.console.print(syntax_reference)
 
-        self.console.print(syntax_display)
-        self.console.print(help_table)
+        self.console.print(" ✨ [yellow]Try casting your spell again!")

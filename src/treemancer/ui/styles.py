@@ -26,7 +26,7 @@ class FileStyler:
         # File extension mappings - Comprehensive collection
         # !: some emojis may break Rich Tree guides (I'm not aware of them all)
         # Probably many of the "larger" emoji (buldings, for example) should be avoided
-        # Problematic ones I found so far: 🏛️, 🏗️, ⚙️
+        # Problematic ones I found so far: 🏛️, 🏗️, ⚙️, 🗄️, 🖼️
         extension_map = {
             # Python ecosystem
             ".py": ("🐍", "bright_yellow"),
@@ -135,9 +135,9 @@ class FileStyler:
             ".tex": ("📄", "green"),
             ".bib": ("📚", "green"),
             # Database
-            ".sql": ("🗄️", "bright_blue"),
-            ".sqlite": ("🗄️", "bright_blue"),
-            ".db": ("🗄️", "bright_blue"),
+            ".sql": ("💾", "bright_blue"),
+            ".sqlite": ("💾", "bright_blue"),
+            ".db": ("💾", "bright_blue"),
             ".prisma": ("🔷", "purple"),
             # DevOps & Infrastructure
             ".dockerfile": ("🐳", "blue"),
@@ -153,14 +153,14 @@ class FileStyler:
             ".lock": ("🔒", "dim yellow"),
             ".lockfile": ("🔒", "dim yellow"),
             # Image & media
-            ".png": ("🖼️", "green"),
-            ".jpg": ("🖼️", "green"),
-            ".jpeg": ("🖼️", "green"),
-            ".gif": ("🖼️", "green"),
+            ".png": ("🎴", "green"),
+            ".jpg": ("🎴", "green"),
+            ".jpeg": ("🎴", "green"),
+            ".gif": ("🎴", "green"),
             ".svg": ("🎨", "cyan"),
-            ".webp": ("🖼️", "green"),
+            ".webp": ("🎴", "green"),
             ".ico": ("🎯", "yellow"),
-            ".bmp": ("🖼️", "green"),
+            ".bmp": ("🎴", "green"),
             ".mp4": ("🎬", "red"),
             ".mov": ("🎬", "red"),
             ".avi": ("🎬", "red"),
@@ -333,9 +333,9 @@ class FileStyler:
             "assets": ("🎯", "bright_green"),
             "static": ("🎯", "bright_green"),
             "public": ("🎯", "bright_green"),
-            "images": ("🖼️", "green"),
-            "img": ("🖼️", "green"),
-            "imgs": ("🖼️", "green"),
+            "images": ("🎴", "green"),
+            "img": ("🎴", "green"),
+            "imgs": ("🎴", "green"),
             "css": ("🎨", "bright_magenta"),
             "js": ("📜", "yellow"),
             "fonts": ("🔤", "blue"),
@@ -343,9 +343,9 @@ class FileStyler:
             "audio": ("🎵", "magenta"),
             "video": ("🎬", "red"),
             # Database & data
-            "db": ("🗄️", "bright_blue"),
-            "database": ("🗄️", "bright_blue"),
-            "data": ("🗄️", "bright_blue"),
+            "db": ("💾", "bright_blue"),
+            "database": ("💾", "bright_blue"),
+            "data": ("💾", "bright_blue"),
             "migrations": ("🔄", "cyan"),
             "migration": ("🔄", "cyan"),
             "seeds": ("🌱", "green"),
@@ -399,7 +399,7 @@ class FileStyler:
             "routes": ("🚊", "yellow"),
             "services": ("🔧", "blue"),
             "providers": ("🔌", "cyan"),
-            "repositories": ("🗄️", "blue"),
+            "repositories": ("💾", "blue"),
             "factories": ("🏭", "purple"),
             "handlers": ("🔧", "blue"),
             # Mobile development

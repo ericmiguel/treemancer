@@ -43,18 +43,25 @@ treemancer create "myapp > README.md main.py src > utils.py"
 treemancer preview "myapp > src > main.py | tests > test.py"
 
 # Use a pre-written spell scroll
-treemancer create templates/webapp.tree --output ./my-webapp
+treemancer create samples/webapp.tree --output ./my-webapp
 
 # Transmute tree diagrams from ancient texts
-treemancer create project-structure.md --all-trees
+treemancer create samples/multiple-trees.md --all-trees
+
+# Transcribe ancient texts
+treemancer convert samples/ecommerce-platform.md --to-syntax
+
+# Write spells using ancient runes
+treemancer convert "myapp > README.md main.py src > utils.py" --to-diagram
 ```
 
 ## 🎯 Simple & Powerful Commands
 
-TreeMancer features a streamlined CLI with just two main commands:
+TreeMancer features a streamlined CLI with just three main commands:
 
 - **`create`** - Main command that auto-detects syntax vs files and creates structures
 - **`preview`** - Validates syntax and shows structure preview without creating files
+- **`convert`** - Round-trip conversion between structured TreeMancer language and tree diagrams
 
 Both commands automatically detect input type and handle:
 - 📝 **TreeMancer syntax** (direct command line input)
@@ -172,9 +179,9 @@ treemancer preview "project > README.md src > main.py utils.py | tests > test_ma
 
 ### 📋 Template System Examples
 
-Create reusable templates in `.tree` files:
+Create reusable samples in `.tree` files:
 
-**`templates/fastapi.tree`:**
+**`samples/fastapi.tree`:**
 ```
 fastapi_project > f(main.py) f(requirements.txt) d(app) d(tests) | app > f(__init__.py) d(routers) d(models) d(database) | routers > f(__init__.py) f(users.py) f(auth.py) | models > f(__init__.py) f(user.py) | database > f(__init__.py) f(connection.py) | tests > f(__init__.py) f(test_main.py)
 ```
@@ -182,10 +189,10 @@ fastapi_project > f(main.py) f(requirements.txt) d(app) d(tests) | app > f(__ini
 **Usage:**
 ```bash
 # Use the template
-treemancer create templates/fastapi.tree
+treemancer create samples/fastapi.tree
 
 # Preview before creating
-treemancer preview templates/fastapi.tree
+treemancer preview samples/fastapi.tree
 ```
 
 ### 🎨 Complex Example Breakdown
@@ -235,7 +242,7 @@ microservices/
 2. **Use Spaces**: Create siblings with spaces: `parent > child1 child2 child3`
 3. **Reset Wisely**: Use `|` to go back one level when you need to create siblings of parent directories
 4. **Type Hints**: Use `d()` and `f()` when file extensions aren't clear (like `Dockerfile`, `Makefile`)
-5. **Templates**: Save complex structures as `.tree` files for reuse
+5. **samples**: Save complex structures as `.tree` files for reuse
 6. **Preview First**: Always use `preview` to validate syntax and see structure before creating
 7. **Auto-Validation**: `preview` automatically validates syntax and shows helpful errors
 
@@ -261,19 +268,46 @@ treemancer preview "invalid > > missing_name"
 
 ## 🛠️ Command Reference
 
-### Main Commands
+### Create
+
+Create directory structures from inline syntax, tree diagram (from `.md` or `.txt` files) or from `.tree` TreeMancer syntax files.
 
 ```bash
-# Create from TreeMancer syntax or file (auto-detection)
+# enjoy the auto-detection
 treemancer create "project > src > main.py"
-treemancer create templates/project.tree
-treemancer create structure.md
+treemancer create samples/ecommerce-platform.md
+treemancer create samples/fastapi.tree
+```
 
-# Preview & validate structure without creating it
+### Preview
+
+Preview & validate structure without creating it
+
+```bash
 treemancer preview "project > src > main.py"      # Shows preview if valid
 treemancer preview "invalid > > syntax"           # Shows errors + help if invalid
-treemancer preview templates/project.tree
-treemancer preview structure.md --all-trees
+treemancer preview samples/datascience.tree
+treemancer preview samples/react.tree --all-trees
+```
+
+### Convert
+
+Round-trip conversion between its syntax and ASCII tree diagrams:
+
+```bash
+# Convert TreeMancer syntax to ASCII diagram
+treemancer convert "project > src > main.py | tests > test.py" --to-diagram
+treemancer convert samples/react.tree --to-diagram --output diagram.md
+
+# Convert ASCII tree diagram to TreeMancer syntax  
+treemancer convert samples/ecommerce-platform.md --to-syntax --output result.tree
+
+# Multi-tree conversion (creates separate files with _{n} suffix)
+# Creates: project_1.tree, project_2.tree, project_3.tree, ...
+treemancer convert samples/multiple-trees.md --to-syntax --all-trees --output multiple-trees.tree
+
+# Display multiple trees in terminal
+treemancer convert samples/multiple-trees.md --to-syntax --all-trees
 ```
 
 ### Useful Options
@@ -291,6 +325,11 @@ treemancer create "..." --output /path/to/output
 # Parse all trees from file
 treemancer create document.md --all-trees
 treemancer preview document.md --all-trees
+
+# Convert operations
+treemancer convert "..." --to-diagram              # Convert to ASCII tree
+treemancer convert "..." --to-syntax               # Convert to TreeMancer syntax
+treemancer convert file.md --all-trees --to-syntax # Convert all trees from file
 ```
 
 ### Template Workflow
