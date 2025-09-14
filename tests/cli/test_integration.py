@@ -294,9 +294,8 @@ class TestConvertIntegration:
         )
 
         assert result.exit_code == 0
-        output = _strip_ansi_codes(result.stdout)
+        output = _strip_ansi_codes(result.stdout).lower()
 
-        assert "Converted TreeMancer Syntax" in output
-        assert "trees" in output
-        assert "Tree 1" in output
-        assert "Tree 2" in output
+        assert "runes were transcribed to spells" in output
+        assert "spell 1" in output
+        assert "spell 2" in output

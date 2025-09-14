@@ -634,21 +634,47 @@ def _handle_multiple_trees_to_syntax(
             tree_path.write_text(syntax, encoding="utf-8")
             saved_files.append(tree_filename)
 
-        console.print(f"[green]✓[/green] {len(trees)} trees converted and saved:")
-        for filename in saved_files:
-            console.print(f"  • {filename}")
+        report_panel = Panel(
+            f"{len(trees)} rune tomes were transcribed to spells",
+            title="Transcription report",
+            title_align="left",
+            border_style="green",
+        )
+
+        console.print(report_panel)
+
+        tips_messages = "\n".join(
+            f"Entone the runes using [green]treemancer preview {filename}[/green]"
+            for filename in saved_files
+        )
+
+        console.print(
+            Panel(
+                tips_messages,
+                title="Ancient wizard tips",
+                title_align="left",
+                border_style="green",
+            )
+        )
+
     else:
-        # Display all trees in terminal with separators
-        msg = f"Converted TreeMancer Syntax ({len(trees)} trees):"
-        console.print(f"\n[bold yellow]{msg}[/bold yellow]")
+        report_panel = Panel(
+            f"{len(trees)} runes were transcribed to spells",
+            title="Transcription report",
+            title_align="left",
+            border_style="green",
+        )
+
+        console.print(report_panel)
 
         for i, tree in enumerate(trees, 1):
             syntax = _convert_tree_to_syntax(tree)
 
-            if i > 1:
-                console.print("\n" + "─" * 50)
-            console.print(f"[dim]Tree {i}:[/dim]")
-            console.print(Panel(syntax, border_style="blue"))
+            output_panel = Panel(
+                f"[dim]{syntax}", title=f"Spell {i}", title_align="left"
+            )
+
+            console.print(output_panel)
 
 
 def handle_convert_to_syntax(

@@ -313,7 +313,7 @@ class TestConvertCommand:
         assert result.exit_code == 0
         output = _strip_ansi_codes(result.stdout)
 
-        assert "trees converted and saved" in output
+        assert "rune tomes were transcribed" in output
 
         # Check that separate files were created
         expected_files = [
@@ -342,11 +342,11 @@ class TestConvertCommand:
         )
 
         assert result.exit_code == 0
-        output = _strip_ansi_codes(result.stdout)
+        output = _strip_ansi_codes(result.stdout).lower()
 
-        assert "Converted TreeMancer Syntax (2 trees)" in output
-        assert "Tree 1:" in output
-        assert "Tree 2:" in output
+        assert "runes were transcribed to spells" in output
+        assert "spell 1" in output
+        assert "spell 2" in output
 
     def test_convert_syntax_to_diagram_terminal_output(
         self, sample_syntax_file: Path
