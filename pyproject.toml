@@ -1,6 +1,6 @@
 [project]
 name = "treemancer"
-version = "0.1.0"
+version = "0.2.0"
 description = "A magical CLI tool to create directory structures from tree diagrams and custom structural language definitions"
 readme = "README.md"
 requires-python = ">=3.12"
