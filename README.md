@@ -268,40 +268,46 @@ treemancer preview "invalid > > missing_name"
 
 ## 🛠️ Command Reference
 
-### Main Commands
+### Create
+
+Create directory structures from inline syntax, tree diagram (from `.md` or `.txt` files) or from `.tree` TreeMancer syntax files.
 
 ```bash
-# Create from TreeMancer syntax or file (auto-detection)
+# enjoy the auto-detection
 treemancer create "project > src > main.py"
-treemancer create samples/project.tree
-treemancer create structure.md
-
-# Preview & validate structure without creating it
-treemancer preview "project > src > main.py"      # Shows preview if valid
-treemancer preview "invalid > > syntax"           # Shows errors + help if invalid
-treemancer preview samples/project.tree
-treemancer preview structure.md --all-trees
+treemancer create samples/ecommerce-platform.md
+treemancer create samples/fastapi.tree
 ```
 
-### Convert Commands (Round-Trip Conversion)
+### Preview
 
-TreeMancer supports round-trip conversion between its syntax and ASCII tree diagrams:
+Preview & validate structure without creating it
+
+```bash
+treemancer preview "project > src > main.py"      # Shows preview if valid
+treemancer preview "invalid > > syntax"           # Shows errors + help if invalid
+treemancer preview samples/datascience.tree
+treemancer preview samples/react.tree --all-trees
+```
+
+### Convert
+
+Round-trip conversion between its syntax and ASCII tree diagrams:
 
 ```bash
 # Convert TreeMancer syntax to ASCII diagram
 treemancer convert "project > src > main.py | tests > test.py" --to-diagram
-treemancer convert syntax.tree --to-diagram --output diagram.md
+treemancer convert samples/react.tree --to-diagram --output diagram.md
 
 # Convert ASCII tree diagram to TreeMancer syntax  
-treemancer convert diagram.md --to-syntax --output result.tree
-treemancer convert "└── project/" --to-syntax
+treemancer convert samples/ecommerce-platform.md --to-syntax --output result.tree
 
 # Multi-tree conversion (creates separate files with _{n} suffix)
-treemancer convert multi_trees.md --to-syntax --all-trees --output project.tree
 # Creates: project_1.tree, project_2.tree, project_3.tree, ...
+treemancer convert samples/multiple-trees.md --to-syntax --all-trees --output multiple-trees.tree
 
 # Display multiple trees in terminal
-treemancer convert multi_trees.md --to-syntax --all-trees
+treemancer convert samples/multiple-trees.md --to-syntax --all-trees
 ```
 
 ### Useful Options
