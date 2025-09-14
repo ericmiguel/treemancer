@@ -1,6 +1,6 @@
 """TreeMancer - A magical CLI tool to create directory structures."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from treemancer.creator import TreeCreator
 from treemancer.models import DirectoryNode

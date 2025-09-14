@@ -146,7 +146,12 @@ class TestCliCommands:
         )
 
         assert result.exit_code == 1
-        assert "Spell casting failed!" in result.stdout
+        stdout_lower = result.stdout.lower()
+
+        # assert the complete error report + tips section is present
+        assert "spell syntax errors" in stdout_lower
+        assert "enchant examples" in stdout_lower
+        assert "read the tome" in stdout_lower
 
     def test_help_commands(self) -> None:
         """Test help output contains expected information."""
@@ -183,3 +188,233 @@ class TestCliCommands:
 
         # Check that directories were created
         assert any(temp_dir.iterdir())  # Something was created
+
+
+class TestConvertCommand:
+    """Test cases for convert command functionality."""
+
+    def setup_method(self) -> None:
+        """Set up test fixtures."""
+        self.runner = CliRunner()
+
+    def test_convert_command_help(self) -> None:
+        """Test convert command help output."""
+        result = self.runner.invoke(app, ["convert", "--help"])
+
+        assert result.exit_code == 0
+        output = _strip_ansi_codes(result.stdout)
+
+        assert "Convert between TreeMancer syntax and ASCII tree diagrams" in output
+        assert "--to-syntax" in output
+        assert "--to-diagram" in output
+        assert "--output" in output
+        assert "--all-trees" in output
+
+    def test_convert_missing_conversion_type(self) -> None:
+        """Test convert command with missing conversion type."""
+        result = self.runner.invoke(app, ["convert", "dummy_input"])
+
+        assert result.exit_code == 1
+        output = _strip_ansi_codes(result.stdout)
+        assert "specify either --to-syntax or --to-diagram" in output
+
+    def test_convert_both_conversion_types(self) -> None:
+        """Test convert command with both conversion types specified."""
+        result = self.runner.invoke(
+            app, ["convert", "dummy_input", "--to-syntax", "--to-diagram"]
+        )
+
+        assert result.exit_code == 1
+        output = _strip_ansi_codes(result.stdout)
+        assert "Cannot specify both --to-syntax and --to-diagram" in output
+
+    def test_convert_nonexistent_file_to_syntax(self) -> None:
+        """Test convert command with nonexistent input file for syntax conversion."""
+        result = self.runner.invoke(
+            app, ["convert", "nonexistent_file.md", "--to-syntax"]
+        )
+
+        assert result.exit_code == 1
+        output = _strip_ansi_codes(result.stdout)
+        assert "File not found" in output
+
+    def test_convert_invalid_syntax_to_diagram(self, temp_dir: Path) -> None:
+        """Test convert command with invalid syntax for diagram conversion."""
+        # Create a file with invalid TreeMancer syntax
+        invalid_file = temp_dir / "invalid.tree"
+        invalid_file.write_text("invalid | | syntax > >", encoding="utf-8")
+
+        result = self.runner.invoke(app, ["convert", str(invalid_file), "--to-diagram"])
+
+        assert result.exit_code == 1
+        output = _strip_ansi_codes(result.stdout)
+        assert "Conversion Error" in output
+
+    def test_convert_single_tree_to_syntax_terminal_output(
+        self, sample_markdown_file: Path
+    ) -> None:
+        """Test converting single tree to syntax with terminal output."""
+        result = self.runner.invoke(
+            app, ["convert", str(sample_markdown_file), "--to-syntax"]
+        )
+
+        assert result.exit_code == 0
+        output = _strip_ansi_codes(result.stdout)
+
+        assert "Spell transcription" in output
+        # Should contain TreeMancer syntax elements
+        assert "|" in output or ">" in output
+
+    def test_convert_single_tree_to_syntax_file_output(
+        self, sample_markdown_file: Path, temp_dir: Path
+    ) -> None:
+        """Test converting single tree to syntax with file output."""
+        output_file = temp_dir / "converted.tree"
+
+        result = self.runner.invoke(
+            app,
+            [
+                "convert",
+                str(sample_markdown_file),
+                "--to-syntax",
+                "--output",
+                str(output_file),
+            ],
+        )
+
+        assert result.exit_code == 0
+        output = _strip_ansi_codes(result.stdout)
+
+        assert "You can find your transcived spell at" in output
+        assert output_file.exists()
+
+        # Verify content is TreeMancer syntax
+        content = output_file.read_text(encoding="utf-8")
+        assert "|" in content or ">" in content
+
+    def test_convert_multiple_trees_to_syntax_separate_files(
+        self, multi_tree_markdown_file: Path, temp_dir: Path
+    ) -> None:
+        """Test converting multiple trees to separate syntax files."""
+        output_file = temp_dir / "converted.tree"
+
+        result = self.runner.invoke(
+            app,
+            [
+                "convert",
+                str(multi_tree_markdown_file),
+                "--to-syntax",
+                "--all-trees",
+                "--output",
+                str(output_file),
+            ],
+        )
+
+        assert result.exit_code == 0
+        output = _strip_ansi_codes(result.stdout)
+
+        assert "trees converted and saved" in output
+
+        # Check that separate files were created
+        expected_files = [
+            temp_dir / "converted_1.tree",
+            temp_dir / "converted_2.tree",
+        ]
+
+        for expected_file in expected_files:
+            assert expected_file.exists()
+            content = expected_file.read_text(encoding="utf-8")
+            assert content.strip()  # Should have content
+            assert "|" in content or ">" in content  # Should be TreeMancer syntax
+
+    def test_convert_multiple_trees_to_syntax_terminal_output(
+        self, multi_tree_markdown_file: Path
+    ) -> None:
+        """Test converting multiple trees to syntax with terminal output."""
+        result = self.runner.invoke(
+            app,
+            [
+                "convert",
+                str(multi_tree_markdown_file),
+                "--to-syntax",
+                "--all-trees",
+            ],
+        )
+
+        assert result.exit_code == 0
+        output = _strip_ansi_codes(result.stdout)
+
+        assert "Converted TreeMancer Syntax (2 trees)" in output
+        assert "Tree 1:" in output
+        assert "Tree 2:" in output
+
+    def test_convert_syntax_to_diagram_terminal_output(
+        self, sample_syntax_file: Path
+    ) -> None:
+        """Test converting syntax to diagram with terminal output."""
+        result = self.runner.invoke(
+            app, ["convert", str(sample_syntax_file), "--to-diagram"]
+        )
+
+        assert result.exit_code == 0
+        output = _strip_ansi_codes(result.stdout)
+
+        assert "ASCII Runes transcription" in output
+        # Should contain tree diagram elements
+        assert "├──" in output or "└──" in output or "│" in output or "/" in output
+
+    def test_convert_syntax_to_diagram_file_output(
+        self, sample_syntax_file: Path, temp_dir: Path
+    ) -> None:
+        """Test converting syntax to diagram with file output."""
+        output_file = temp_dir / "diagram.txt"
+
+        result = self.runner.invoke(
+            app,
+            [
+                "convert",
+                str(sample_syntax_file),
+                "--to-diagram",
+                "--output",
+                str(output_file),
+            ],
+        )
+
+        assert result.exit_code == 0
+        output = _strip_ansi_codes(result.stdout)
+
+        assert "You can find your transcived ASCII runes at" in output
+        assert output_file.exists()
+
+        # Verify content is a tree diagram
+        content = output_file.read_text(encoding="utf-8")
+        assert "├──" in content or "└──" in content or "│" in content or "/" in content
+
+    def test_convert_syntax_to_diagram_markdown_output(
+        self, sample_syntax_file: Path, temp_dir: Path
+    ) -> None:
+        """Test converting syntax to diagram with markdown file output."""
+        output_file = temp_dir / "diagram.md"
+
+        result = self.runner.invoke(
+            app,
+            [
+                "convert",
+                str(sample_syntax_file),
+                "--to-diagram",
+                "--output",
+                str(output_file),
+            ],
+        )
+
+        assert result.exit_code == 0
+        output = _strip_ansi_codes(result.stdout)
+
+        assert "You can find your transcived ASCII runes at" in output
+        assert output_file.exists()
+
+        # Verify content is wrapped in markdown code blocks
+        content = output_file.read_text(encoding="utf-8")
+        assert content.startswith("```")
+        assert content.endswith("```")
+        assert "├──" in content or "└──" in content or "│" in content or "/" in content

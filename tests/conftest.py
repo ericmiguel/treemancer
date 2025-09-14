@@ -227,3 +227,46 @@ class MockConsole:
     def clear_messages(self) -> None:
         """Clear stored messages."""
         self.messages.clear()
+
+
+@pytest.fixture
+def multi_tree_markdown_file(temp_dir: Path) -> Path:
+    """Create a markdown file with multiple tree structures."""
+    content = """# Multiple Project Structures
+
+## Web Project
+```
+web_project/
+├── main.py
+├── requirements.txt
+└── app/
+    ├── models/
+    │   └── user.py
+    └── api/
+        └── routes.py
+```
+
+## Frontend Project
+```
+frontend/
+├── package.json
+├── src/
+│   ├── index.js
+│   └── components/
+│       └── App.js
+└── tests/
+    └── app.test.js
+```
+"""
+    file_path = temp_dir / "multi_trees.md"
+    file_path.write_text(content, encoding="utf-8")
+    return file_path
+
+
+@pytest.fixture
+def sample_syntax_file(temp_dir: Path) -> Path:
+    """Create a sample TreeMancer syntax file."""
+    content = "app > main.py requirements.txt models > user.py | api > routes.py"
+    file_path = temp_dir / "sample.tree"
+    file_path.write_text(content, encoding="utf-8")
+    return file_path

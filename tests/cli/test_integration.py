@@ -165,3 +165,138 @@ class TestCliIntegration:
         )
 
         assert result.returncode == 0
+
+
+class TestConvertIntegration:
+    """Test cases for convert command integration."""
+
+    def setup_method(self) -> None:
+        """Set up test fixtures."""
+        from typer.testing import CliRunner
+
+        from treemancer.cli import app
+
+        self.runner = CliRunner()
+        self.app = app
+
+    def test_round_trip_conversion(
+        self, sample_syntax_file: Path, temp_dir: Path
+    ) -> None:
+        """Test round-trip conversion: syntax -> diagram -> syntax."""
+        # First conversion: syntax to diagram
+        diagram_file = temp_dir / "diagram.md"
+        result1 = self.runner.invoke(
+            self.app,
+            [
+                "convert",
+                str(sample_syntax_file),
+                "--to-diagram",
+                "--output",
+                str(diagram_file),
+            ],
+        )
+
+        assert result1.exit_code == 0
+        assert diagram_file.exists()
+
+        # Second conversion: diagram back to syntax
+        converted_syntax_file = temp_dir / "converted.tree"
+        result2 = self.runner.invoke(
+            self.app,
+            [
+                "convert",
+                str(diagram_file),
+                "--to-syntax",
+                "--output",
+                str(converted_syntax_file),
+            ],
+        )
+
+        assert result2.exit_code == 0
+        assert converted_syntax_file.exists()
+
+        # Verify both syntax files represent similar structures
+        original_content = sample_syntax_file.read_text(encoding="utf-8").strip()
+        converted_content = converted_syntax_file.read_text(encoding="utf-8").strip()
+
+        # Both should be valid TreeMancer syntax
+        assert "|" in original_content or ">" in original_content
+        assert "|" in converted_content or ">" in converted_content
+
+    def test_convert_tree_to_syntax_functionality(
+        self, sample_markdown_file: Path, temp_dir: Path
+    ) -> None:
+        """Test TreeMancer syntax generation through CLI integration."""
+        output_file = temp_dir / "converted.tree"
+
+        result = self.runner.invoke(
+            self.app,
+            [
+                "convert",
+                str(sample_markdown_file),
+                "--to-syntax",
+                "--output",
+                str(output_file),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert output_file.exists()
+
+        # Verify content is TreeMancer syntax
+        content = output_file.read_text(encoding="utf-8")
+        assert "|" in content or ">" in content
+
+        # Should contain expected file/directory names from sample
+        assert "README.md" in content
+        assert "main.py" in content
+
+    def test_multiple_trees_conversion_integration(
+        self, multi_tree_markdown_file: Path, temp_dir: Path
+    ) -> None:
+        """Test multiple tree conversion through CLI integration."""
+        output_file = temp_dir / "multi.tree"
+
+        result = self.runner.invoke(
+            self.app,
+            [
+                "convert",
+                str(multi_tree_markdown_file),
+                "--to-syntax",
+                "--all-trees",
+                "--output",
+                str(output_file),
+            ],
+        )
+
+        assert result.exit_code == 0
+
+        # Should have created separate files
+        expected_files = [temp_dir / "multi_1.tree", temp_dir / "multi_2.tree"]
+
+        for expected_file in expected_files:
+            assert expected_file.exists()
+            content = expected_file.read_text(encoding="utf-8")
+            assert content.strip()  # Should have content
+
+    def test_terminal_output_functionality(
+        self, multi_tree_markdown_file: Path
+    ) -> None:
+        """Test terminal output through CLI integration."""
+        result = self.runner.invoke(
+            self.app,
+            [
+                "convert",
+                str(multi_tree_markdown_file),
+                "--to-syntax",
+                "--all-trees",
+            ],
+        )
+
+        assert result.exit_code == 0
+        output = _strip_ansi_codes(result.stdout)
+
+        assert "Converted TreeMancer Syntax" in output
+        assert "trees" in output
+        assert "Tree 1" in output
+        assert "Tree 2" in output
