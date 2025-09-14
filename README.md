@@ -1,5 +1,13 @@
 # 🧙 TreeMancer
 
+[![PyPI version](https://badge.fury.io/py/treemancer.svg)](https://badge.fury.io/py/treemancer)
+[![Python Support](https://img.shields.io/pypi/pyversions/treemancer.svg)](https://pypi.org/project/treemancer/)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![CI](https://github.com/ericmiguel/treemancer/actions/workflows/ci.yaml/badge.svg)](https://github.com/ericmiguel/treemancer/actions/workflows/ci.yaml)
+[![codecov](https://codecov.io/gh/ericmiguel/treemancer/branch/main/graph/badge.svg)](https://codecov.io/gh/ericmiguel/treemancer)
+[![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Checked with pyright](https://microsoft.github.io/pyright/img/pyright_badge.svg)](https://microsoft.github.io/pyright/)
+
 TreeMancer is a mystical CLI tool that conjures real directory structures from both ASCII tree diagrams and **its own enchanted domain-specific language**. Like a true wizard of the filesystem, it transforms your project ideas into reality with just a few magical incantations.
 
 *You probably do not need it, but it was very fun to build!*
