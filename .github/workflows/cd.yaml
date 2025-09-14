@@ -1,0 +1,214 @@
+name: CD
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        default: 'v0.1.0'
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  # Validate release
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+    
+    - name: Set up Python
+      run: uv python install ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: uv sync --dev
+    
+    - name: Extract version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "release" ]; then
+          VERSION=${{ github.event.release.tag_name }}
+        else
+          VERSION=${{ github.event.inputs.version }}
+        fi
+        echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
+        echo "Releasing version: ${VERSION#v}"
+    
+    - name: Run full test suite
+      run: |
+        uv run ruff format --check .
+        uv run ruff check .
+        uv run pyright
+        uv run pytest --cov=src/treemancer
+
+  # Build for multiple platforms
+  build:
+    name: Build Package
+    needs: validate
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+    
+    - name: Set up Python
+      run: uv python install ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: uv sync --dev
+    
+    - name: Build package
+      run: uv build
+    
+    - name: Verify package
+      run: |
+        uv run twine check dist/*
+        ls -la dist/
+    
+    - name: Store build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package
+        path: dist/
+        retention-days: 7
+
+  # Integration test on package
+  integration-test:
+    name: Integration Test (${{ matrix.os }})
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package
+        path: dist/
+    
+    - name: Install UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+    
+    - name: Set up Python
+      run: uv python install ${{ env.PYTHON_VERSION }}
+    
+    - name: Install package from wheel
+      shell: bash
+      run: |
+        WHEEL_FILE=$(find dist -name "*.whl" | head -1)
+        uv tool install "$WHEEL_FILE"
+    
+    - name: Test CLI functionality
+      shell: bash
+      run: |
+        treemancer --version
+        treemancer preview "test > main.py utils.py"
+        treemancer create "integration_test > file1.py file2.py" --dry-run
+
+  # Deploy to Test PyPI
+  deploy-test:
+    name: Deploy to Test PyPI
+    needs: [validate, integration-test]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package
+        path: dist/
+    
+    - name: Publish to Test PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository-url: https://test.pypi.org/legacy/
+        skip-existing: true
+
+  # Deploy to Production PyPI
+  deploy-prod:
+    name: Deploy to PyPI
+    needs: [validate, deploy-test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package
+        path: dist/
+    
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+  # Create GitHub Release (if triggered manually)
+  github-release:
+    name: Create GitHub Release
+    needs: [validate, deploy-prod]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package
+        path: dist/
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ needs.validate.outputs.version }}
+        name: TreeMancer v${{ needs.validate.outputs.version }}
+        draft: false
+        prerelease: false
+        files: |
+          dist/*.whl
+          dist/*.tar.gz
+        body: |
+          ## 🧙‍♂️ TreeMancer v${{ needs.validate.outputs.version }}
+          
+          ### ✨ What's New
+          
+          This release includes improvements and bug fixes to TreeMancer's magical directory creation capabilities.
+          
+          ### 📦 Installation
+          
+          ```bash
+          pip install treemancer==${{ needs.validate.outputs.version }}
+          # or
+          uv add treemancer==${{ needs.validate.outputs.version }}
+          ```
+          
+          ### 🚀 Quick Start
+          
+          ```bash
+          treemancer create "project > src > main.py | tests > test.py"
+          ```
+          
+          **Full Changelog**: https://github.com/ericmiguel/treemancer/compare/v${{ needs.validate.outputs.version }}

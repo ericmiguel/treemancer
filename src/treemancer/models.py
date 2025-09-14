@@ -318,10 +318,13 @@ class FileSystemTree:
 
         # Clear existing tree
         self.root = DirectoryNode(data.get("name", "root"))
+        print(f"Created root directory: {self.root.name}")
 
         # Create children
         for child_data in data.get("children", []):
             _create_node(child_data, self.root)
+
+            print(f"Created node: {child_data['name']}")
 
     def create_from_yaml(self, yaml_str: str) -> None:
         """Create tree structure from YAML string."""
@@ -457,8 +460,5 @@ def validate_directory_data(data: dict[str, Any]) -> DirectoryNodeData:
 
     return cast(DirectoryNodeData, data)
 
-
-# Temporary aliases for backwards compatibility
-# TODO: Remove these after updating all imports
 
 Tree = FileSystemTree

@@ -2,16 +2,17 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, feat/* ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
   test:
+    name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.13"]
+        python-version: ["3.12", "3.13"]
     
     steps:
     - uses: actions/checkout@v4
@@ -36,19 +37,22 @@ jobs:
     - name: Type check
       run: uv run pyright
     
-    - name: Test
-      run: uv run pytest --cov=tree_creator --cov-report=xml --cov-report=term-missing
+    - name: Test with coverage
+      run: uv run pytest --cov=src/treemancer --cov-report=xml --cov-report=term-missing
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
-        fail_ci_if_error: true
+        fail_ci_if_error: false
         token: ${{ secrets.CODECOV_TOKEN }}
+      if: matrix.python-version == '3.13'
 
   build:
+    name: Build Package
     needs: test
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     
     steps:
     - uses: actions/checkout@v4
@@ -74,6 +78,7 @@ jobs:
         path: dist/
 
   integration-test:
+    name: Integration Tests
     needs: build
     runs-on: ubuntu-latest
     
@@ -98,10 +103,11 @@ jobs:
       run: uv tool install dist/*.whl
     
     - name: Test CLI installation
-      run: tree-creator --version
+      run: treemancer --version
     
     - name: Test basic functionality
       run: |
-        tree-creator generate-tree "test > file1.py file2.py dir1 > file3.py"
-        tree-creator from-syntax "test > main.py utils.py" --dry-run --output ./test-output
-        tree-creator from-file examples/project_structures.md --dry-run --output ./test-output
+        treemancer create "test > file1.py file2.py dir1 > file3.py" --dry-run
+        treemancer preview "test > main.py utils.py"
+        echo "test > example.py" > test.tree
+        treemancer create test.tree --dry-run

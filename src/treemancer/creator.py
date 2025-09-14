@@ -1,15 +1,16 @@
-"""Directory and file creator from tree structures."""
+"""The magical forge where directory trees come to life."""
 
 from pathlib import Path
 from typing import TypedDict
 
 from rich.console import Console
-from rich.tree import Tree as RichTree
+from rich.table import Table
 
 from treemancer.models import DirectoryNode
 from treemancer.models import FileNode
 from treemancer.models import FileSystemNode
 from treemancer.models import FileSystemTree
+from treemancer.ui.components import UIComponents
 
 
 class CreationResult(TypedDict):
@@ -38,7 +39,8 @@ class TreeCreator:
         console : Console | None
             Rich console for output, creates new one if None
         """
-        self.console = console or Console()
+        self.console = Console(safe_box=True)
+        self.ui = UIComponents(self.console)
 
     def create_structure(
         self,
@@ -119,22 +121,12 @@ class TreeCreator:
                     results["files_created"] += 1
                     results["structure"].append(str(node_path))
 
-                    self.console.print(
-                        f"{'[DRY RUN] ' if dry_run else ''}Created file: "
-                        f"[green]{node_path}[/green]"
-                    )
-
             elif isinstance(node, DirectoryNode):
                 if not dry_run:
                     node_path.mkdir(parents=True, exist_ok=True)
 
                 results["directories_created"] += 1
                 results["structure"].append(str(node_path))
-
-                self.console.print(
-                    f"{'[DRY RUN] ' if dry_run else ''}Created directory: "
-                    f"[bold blue]{node_path}[/bold blue]"
-                )
 
                 # Recursively create children
                 for child in node.children:
@@ -191,67 +183,35 @@ class TreeCreator:
         return results
 
     def display_tree_preview(self, tree: FileSystemTree) -> None:
-        """Display tree structure preview using Rich.
+        """Display tree structure preview using Rich with icons and colors.
 
         Parameters
         ----------
         tree : FileSystemTree
             File system tree to display
         """
-        rich_tree = self._build_rich_tree(tree.root)
-        self.console.print(rich_tree)
+        self.ui.display_tree_preview(tree)
 
-    def _build_rich_tree(
-        self, node: FileSystemNode, rich_tree: RichTree | None = None
-    ) -> RichTree:
-        """Build Rich tree representation.
+    def create_file_statistics_table(self, tree: FileSystemTree) -> Table:
+        """Create file statistics table with Rich formatting.
 
         Parameters
         ----------
-        node : FileSystemNode
-            Node to build tree from
-        rich_tree : RichTree | None
-            Existing rich tree to add to
+        tree : FileSystemTree
+            File system tree to analyze
 
         Returns
         -------
-        RichTree
-            Rich tree representation
+        Rich table with file statistics
         """
-        if rich_tree is None:
-            if isinstance(node, FileNode):
-                display_name = f"[green]{node.name}[/green]"
-            else:
-                display_name = f"[bold blue]{node.name}/[/bold blue]"
-            rich_tree = RichTree(display_name)
-
-        # Only DirectoryNode has children
-        if isinstance(node, DirectoryNode):
-            for child in node.children:
-                if isinstance(child, FileNode):
-                    rich_tree.add(f"[green]{child.name}[/green]")
-                else:
-                    child_display = f"[bold blue]{child.name}/[/bold blue]"
-                    child_tree = rich_tree.add(child_display)
-                    self._build_rich_tree(child, child_tree)
-
-        return rich_tree
+        return self.ui.create_file_statistics_table(tree)
 
     def print_summary(self, results: CreationResult) -> None:
-        """Print creation summary.
+        """Print creation summary with Rich Panel formatting.
 
         Parameters
         ----------
         results : CreationResult
             Results from create_structure
         """
-        self.console.print("\n[bold yellow]Summary:[/bold yellow]")
-        self.console.print(
-            f"Directories created: [blue]{results['directories_created']}[/blue]"
-        )
-        self.console.print(f"Files created: [green]{results['files_created']}[/green]")
-
-        if results["errors"]:
-            self.console.print(f"[red]Errors: {len(results['errors'])}[/red]")
-            for error in results["errors"]:
-                self.console.print(f"  [red]• {error}[/red]")
+        self.ui.print_summary(results)
